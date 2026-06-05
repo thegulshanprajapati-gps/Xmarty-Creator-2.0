@@ -90,9 +90,7 @@ export function Navbar() {
         <div className="flex justify-between h-14 items-center">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="bg-primary h-9 w-9 rounded-full flex items-center justify-center shadow-lg shadow-primary/30 border-2 border-accent/20">
-                <span className="text-white font-bold text-sm tracking-tighter">XC</span>
-              </div>
+              <img src="/logo.png" alt="Logo" className="h-9 w-9 object-contain" />
               <EditableText
                 pageSlug="navbar"
                 sectionKey="brand"

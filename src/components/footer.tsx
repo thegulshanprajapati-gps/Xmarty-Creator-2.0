@@ -80,9 +80,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="rounded-xl bg-primary p-2.5 transition-all shadow-lg shadow-primary/20 group-hover:bg-primary/90">
-                <GraduationCap className="h-7 w-7 text-primary-foreground" />
-              </div>
+              <img src="/logo.png" alt="Logo" className="h-10 w-10 object-contain" />
               <span className="font-headline text-2xl font-bold tracking-tight text-primary">
                 {settings?.siteName || 'XmartyCreator'}
               </span>
