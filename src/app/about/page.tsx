@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Award, Users, Rocket, Heart } from "lucide-react";
+import { Award, Users, Rocket, Heart, Twitter, Linkedin, Github } from "lucide-react";
 import { useContentBlock } from "@/hooks/use-content-block";
 import Image from "next/image";
 
@@ -10,6 +10,31 @@ export default function AboutPage() {
   const seoTitle = useContentBlock("about", "seo", "title", "About Us - XmartyCreator", "text");
   const seoDesc = useContentBlock("about", "seo", "description", "Learn about XmartyCreator, our story, mission, and how we help creators build real software.", "text");
   const seoKeywords = useContentBlock("about", "seo", "keywords", "about us, mission, story, xmartycreator", "text");
+
+  const founderBadge = useContentBlock("about", "founder", "badge", "Meet Our Founder", "text");
+  const founderName = useContentBlock("about", "founder", "name", "Gulshan Kumar", "text");
+  const founderTitle = useContentBlock("about", "founder", "title", "Founder & CEO, XmartyCreator", "text");
+  const founderQuote = useContentBlock("about", "founder", "quote", `"Our mission is simple: we don't just teach syntax, we forge digital architects who build production-grade, scalable software from day one."`, "text");
+  const founderBio = useContentBlock("about", "founder", "bio", `<p>Gulshan Kumar started XmartyCreator with a vision to revolutionize tech education. With years of experience leading engineering teams and building enterprise architectures, he realized that traditional coursework fails to prepare students for real-world software creation.</p><p>By introducing AI-mentorship (Vasant AI) and codebases that mirror real tech environments, he bridged the gap between learning and architectural execution. Under his leadership, XmartyCreator has grown into a global community.</p>`, "text");
+  const founderImageBlock = useContentBlock("about", "founder", "image", "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80", "text");
+  const founderTwitter = useContentBlock("about", "founder", "twitter", "#", "text");
+  const founderLinkedin = useContentBlock("about", "founder", "linkedin", "#", "text");
+  const founderGithub = useContentBlock("about", "founder", "github", "#", "text");
+
+  const getImageUrl = (imgBlockValue: any) => {
+    if (!imgBlockValue) return "";
+    if (typeof imgBlockValue === 'string') {
+      if (imgBlockValue.trim().startsWith('{')) {
+        try {
+          return JSON.parse(imgBlockValue).url || imgBlockValue;
+        } catch (e) {
+          return imgBlockValue;
+        }
+      }
+      return imgBlockValue;
+    }
+    return imgBlockValue.url || "";
+  };
 
   const values = [
     { title: "Innovation", icon: Rocket, desc: "We push the boundaries of EdTech through AI and modern design." },
@@ -87,41 +112,50 @@ export default function AboutPage() {
           <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[300px] h-[300px] bg-red-500/[0.03] rounded-full blur-3xl pointer-events-none" />
           <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row-reverse items-center gap-20 relative z-10">
             <div className="flex-1 space-y-6">
-              <Badge variant="outline" className="px-4 py-1 text-red-600 dark:text-red-500 border-red-200 dark:border-red-500/20 uppercase tracking-widest font-extrabold text-[10px] bg-red-500/5">Meet Our Founder</Badge>
-              <h2 className="text-4xl lg:text-5xl font-headline font-black text-slate-900 dark:text-white leading-tight">Gulshan Kumar</h2>
-              <p className="text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest -mt-2">Founder & CEO, XmartyCreator</p>
+              <Badge variant="outline" className="px-4 py-1 text-red-600 dark:text-red-500 border-red-200 dark:border-red-500/20 uppercase tracking-widest font-extrabold text-[10px] bg-red-500/5">
+                {String(founderBadge.value)}
+              </Badge>
+              <h2 className="text-4xl lg:text-5xl font-headline font-black text-slate-900 dark:text-white leading-tight">
+                {String(founderName.value)}
+              </h2>
+              <p className="text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest -mt-2">
+                {String(founderTitle.value)}
+              </p>
               
-              <blockquote className="border-l-4 border-red-500 pl-4 italic text-base md:text-lg text-slate-700 dark:text-slate-300 font-medium">
-                "Our mission is simple: we don't just teach syntax, we forge digital architects who build production-grade, scalable software from day one."
-              </blockquote>
+              <blockquote 
+                className="border-l-4 border-red-500 pl-4 italic text-base md:text-lg text-slate-700 dark:text-slate-300 font-medium"
+                dangerouslySetInnerHTML={{ __html: String(founderQuote.value) }}
+              />
               
-              <div className="space-y-4 text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                <p>
-                  Gulshan Kumar started XmartyCreator with a vision to revolutionize tech education. With years of experience leading engineering teams and building enterprise architectures, he realized that traditional coursework fails to prepare students for real-world software creation.
-                </p>
-                <p>
-                  By introducing AI-mentorship (Vasant AI) and codebases that mirror real tech environments, he bridged the gap between learning and architectural execution. Under his leadership, XmartyCreator has grown into a global community.
-                </p>
-              </div>
+              <div 
+                className="space-y-4 text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-medium"
+                dangerouslySetInnerHTML={{ __html: String(founderBio.value) }}
+              />
 
               {/* Founder Social Links */}
               <div className="flex gap-3 pt-2">
-                <a href="#" className="h-10 w-10 rounded-xl bg-slate-200/50 hover:bg-red-500/10 text-slate-700 hover:text-red-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-red-500 flex items-center justify-center transition-all">
-                  <i className="fa-brands fa-x-twitter text-base"></i>
-                </a>
-                <a href="#" className="h-10 w-10 rounded-xl bg-slate-200/50 hover:bg-red-500/10 text-slate-700 hover:text-red-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-red-500 flex items-center justify-center transition-all">
-                  <i className="fa-brands fa-linkedin-in text-base"></i>
-                </a>
-                <a href="#" className="h-10 w-10 rounded-xl bg-slate-200/50 hover:bg-red-500/10 text-slate-700 hover:text-red-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-red-500 flex items-center justify-center transition-all">
-                  <i className="fa-brands fa-github text-base"></i>
-                </a>
+                {founderTwitter.value && founderTwitter.value !== "#" && (
+                  <a href={String(founderTwitter.value)} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-xl bg-slate-200/50 hover:bg-red-500/10 text-slate-700 hover:text-red-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-red-500 flex items-center justify-center transition-all">
+                    <Twitter className="h-5 w-5" />
+                  </a>
+                )}
+                {founderLinkedin.value && founderLinkedin.value !== "#" && (
+                  <a href={String(founderLinkedin.value)} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-xl bg-slate-200/50 hover:bg-red-500/10 text-slate-700 hover:text-red-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-red-500 flex items-center justify-center transition-all">
+                    <Linkedin className="h-5 w-5" />
+                  </a>
+                )}
+                {founderGithub.value && founderGithub.value !== "#" && (
+                  <a href={String(founderGithub.value)} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-xl bg-slate-200/50 hover:bg-red-500/10 text-slate-700 hover:text-red-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-red-500 flex items-center justify-center transition-all">
+                    <Github className="h-5 w-5" />
+                  </a>
+                )}
               </div>
             </div>
             
             <div className="flex-1 w-full relative max-w-sm aspect-[3/4] rounded-[3rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl group">
               <Image 
-                src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80" 
-                alt="Gulshan Kumar, Founder" 
+                src={getImageUrl(founderImageBlock.value)} 
+                alt={`${String(founderName.value)}, Founder`}
                 fill 
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
