@@ -2,7 +2,6 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-
 export type ContentBlock = {
   id: string;
   page_slug: string;
@@ -15,15 +14,33 @@ export type ContentBlock = {
   updated_at: string;
 };
 
+export type CustomFont = {
+  id: string;
+  name: string;
+  format: string;
+  file_name: string;
+  created_at?: string;
+};
+
 interface CMSContextType {
   settings: any;
   contentBlocks: ContentBlock[];
+  customFonts: CustomFont[];
   loading: boolean;
   refreshSettings: () => Promise<void>;
   refreshContentBlocks: () => Promise<void>;
+  refreshFonts: () => Promise<void>;
 }
 
-const CMSContext = createContext<CMSContextType>({ settings: null, contentBlocks: [], loading: false, refreshSettings: async () => {}, refreshContentBlocks: async () => {} });
+const CMSContext = createContext<CMSContextType>({
+  settings: null,
+  contentBlocks: [],
+  customFonts: [],
+  loading: false,
+  refreshSettings: async () => {},
+  refreshContentBlocks: async () => {},
+  refreshFonts: async () => {},
+});
 
 function hexToHslString(hex?: string): string {
   if (!hex || typeof hex !== 'string') return '0 100% 50%';
@@ -50,16 +67,6 @@ function hexToHslString(hex?: string): string {
   return `${H} ${S}% ${L}%`;
 }
 
-function getHoverHsl(primaryHsl: string): string {
-  const match = primaryHsl.trim().match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/);
-  if (!match) return primaryHsl;
-  const h = Number(match[1]);
-  const s = Number(match[2]);
-  const l = Number(match[3]);
-  const nextL = Math.max(0, Math.min(100, l - 10));
-  return `${h} ${s}% ${nextL}%`;
-}
-
 function getReadableForeground(hsl: string): string {
   const match = hsl.trim().match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/);
   if (!match) return '210 40% 98%';
@@ -72,6 +79,8 @@ const defaultSettings = {
   primaryColor: '#FF0000',
   secondaryColor: '#FF0000',
   siteName: 'XmartyCreator',
+  headingsFont: 'Times New Roman',
+  bodyFont: 'Times New Roman',
 };
 
 export const CMSProvider = ({ 
@@ -85,7 +94,8 @@ export const CMSProvider = ({
 }) => {
   const [settings, setSettings] = useState<any>(initialSettings || defaultSettings);
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>(initialContentBlocks || []);
-  const [loading, setLoading] = useState(false);
+  const [customFonts, setCustomFonts] = useState<CustomFont[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const refreshContentBlocks = useCallback(async () => {
     try {
@@ -100,7 +110,6 @@ export const CMSProvider = ({
   }, []);
 
   const refreshSettings = useCallback(async () => {
-    setLoading(true);
     try {
       const res = await fetch('/api/settings');
       if (!res.ok) throw new Error('Failed to load site settings');
@@ -112,21 +121,44 @@ export const CMSProvider = ({
         primaryColor: row?.primary_color || defaultSettings.primaryColor,
         secondaryColor: row?.secondary_color || row?.primary_color || defaultSettings.secondaryColor,
         themeMode: row?.theme_settings?.themeMode || defaultSettings.themeMode,
+        headingsFont: row?.headings_font || 'Times New Roman',
+        bodyFont: row?.body_font || 'Times New Roman',
         logo: row?.logo || null,
         ...row,
       });
     } catch (error) {
       console.error('Failed to load site settings', error);
       setSettings(defaultSettings);
-    } finally {
-      setLoading(false);
+    }
+  }, []);
+
+  const refreshFonts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/fonts');
+      if (!res.ok) throw new Error('Failed to fetch custom fonts');
+      const data = await res.json();
+      if (data.success && data.fonts) {
+        setCustomFonts(data.fonts);
+      }
+    } catch (error) {
+      console.warn('Failed to refresh custom fonts', error);
+      setCustomFonts([]);
     }
   }, []);
 
   useEffect(() => {
-    refreshSettings();
-    refreshContentBlocks();
-  }, [refreshSettings, refreshContentBlocks]);
+    const initCMS = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([refreshSettings(), refreshContentBlocks(), refreshFonts()]);
+      } catch (err) {
+        console.error('Error initializing CMS', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    initCMS();
+  }, [refreshSettings, refreshContentBlocks, refreshFonts]);
 
   useEffect(() => {
     if (!settings) return;
@@ -143,6 +175,22 @@ export const CMSProvider = ({
     const primaryForeground = getReadableForeground(primary);
     const accentForeground = getReadableForeground(accent);
 
+    const activeHeadingsFont = settings?.headingsFont || 'Times New Roman';
+    const activeBodyFont = settings?.bodyFont || 'Times New Roman';
+
+    // Generate @font-face style declarations
+    const fontFacesCss = customFonts.map(f => {
+      const formatStr = f.format === 'truetype' ? 'truetype' : f.format === 'opentype' ? 'opentype' : f.format;
+      const fontUrl = `/fonts/${encodeURIComponent(f.file_name)}?v=${f.created_at ? new Date(f.created_at).getTime() : Date.now()}`;
+      return `
+        @font-face {
+          font-family: '${f.name}';
+          src: url('${fontUrl}') format('${formatStr}');
+          font-display: swap;
+        }
+      `;
+    }).join('\n');
+
     let styleTag = document.getElementById('cms-dynamic-orchestration');
     if (!styleTag) {
       styleTag = document.createElement('style');
@@ -151,12 +199,16 @@ export const CMSProvider = ({
     }
 
     const css = `
+      ${fontFacesCss}
+
       :root {
         --primary: ${primary} !important;
         --primary-foreground: ${primaryForeground} !important;
         --ring: ${primary} !important;
         --accent: ${accent} !important;
         --accent-foreground: ${accentForeground} !important;
+        --font-headings: '${activeHeadingsFont}' !important;
+        --font-body: '${activeBodyFont}' !important;
       }
       .dark {
         --primary: ${primary} !important;
@@ -164,6 +216,8 @@ export const CMSProvider = ({
         --ring: ${primary} !important;
         --accent: ${accent} !important;
         --accent-foreground: ${accentForeground} !important;
+        --font-headings: '${activeHeadingsFont}' !important;
+        --font-body: '${activeBodyFont}' !important;
       }
 
       .bg-primary { background-color: hsl(${primary}) !important; }
@@ -173,12 +227,33 @@ export const CMSProvider = ({
       .fill-primary { fill: hsl(${primary}) !important; }
       .bg-accent { background-color: hsl(${accent}) !important; }
       .text-accent { color: hsl(${accent}) !important; }
+
+      /* Global selector binds */
+      h1, h2, h3, h4, h5, h6, .font-headline {
+        font-family: var(--font-headings) !important;
+      }
+      body, .font-body {
+        font-family: var(--font-body) !important;
+      }
     `;
     styleTag.innerHTML = css;
-  }, [settings?.primaryColor, settings?.secondaryColor]);
+
+    // Direct property setting on documentElement
+    document.documentElement.style.setProperty('--font-body', `'${activeBodyFont}'`);
+    document.documentElement.style.setProperty('--font-headings', `'${activeHeadingsFont}'`);
+
+    // Runtime proof logs
+    console.log('Theme Settings:', settings);
+    console.log('Body Font DB:', settings.bodyFont || settings.body_font);
+    console.log(
+      'Applied Font:',
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--font-body')
+    );
+  }, [settings?.primaryColor, settings?.secondaryColor, settings?.headingsFont, settings?.bodyFont, customFonts]);
 
   return (
-    <CMSContext.Provider value={{ settings, contentBlocks, loading, refreshSettings, refreshContentBlocks }}>
+    <CMSContext.Provider value={{ settings, contentBlocks, customFonts, loading, refreshSettings, refreshContentBlocks, refreshFonts }}>
       {children}
     </CMSContext.Provider>
   );

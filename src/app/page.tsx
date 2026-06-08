@@ -25,6 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EditableText } from "@/components/cms/editable-text";
+import { CustomizableBadge } from "@/components/cms/customizable-badge";
 import { useContentBlock } from "@/hooks/use-content-block";
 
 const parseCmsImage = (val: any, defaultUrl: string) => {
@@ -100,6 +101,12 @@ const defaultTestimonials = [
   }
 ];
 
+const iconMap: Record<string, any> = {
+  MessageSquare,
+  BadgeCheck,
+  GraduationCap,
+};
+
 const defaultCommunityFeatures = [
   { icon: MessageSquare, label: "Daily discussions" },
   { icon: BadgeCheck, label: "Project reviews" },
@@ -161,6 +168,17 @@ export default function HomePage() {
     defaultTestimonials,
     "list"
   );
+  const communityFeaturesBlock = useContentBlock(
+    "home",
+    "community",
+    "features",
+    defaultCommunityFeatures,
+    "json"
+  );
+
+  const communityFeatures = Array.isArray(communityFeaturesBlock.value)
+    ? communityFeaturesBlock.value
+    : defaultCommunityFeatures;
 
   const communityImageBlock = useContentBlock(
     "home",
@@ -258,8 +276,8 @@ export default function HomePage() {
       <meta name="description" content={seoDescBlock.value} />
       <meta name="keywords" content={seoKeywordsBlock.value} />
       <main>
-        <section className="relative overflow-hidden border-b bg-muted/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+        <section className="relative overflow-hidden border-b bg-muted/20 flex flex-col justify-center py-16 sm:py-20 lg:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-[1.02fr_0.98fr] gap-14 lg:gap-20 items-center">
               <motion.div
                 initial={{ opacity: 0, y: 24 }}
@@ -267,11 +285,15 @@ export default function HomePage() {
                 transition={{ duration: 0.5 }}
                 className="space-y-8 text-center lg:text-left"
               >
-                <Badge variant="outline" className="border-muted/20 px-4 py-1 text-foreground">
-                  INDUSTRY READY EDTECH
-                </Badge>
-                <div className="space-y-6">
-                  <h1 className="font-headline text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tight leading-[0.95]">
+                <CustomizableBadge
+                  pageSlug="home"
+                  sectionKey="hero"
+                  badgeKey="badge"
+                  defaultText="INDUSTRY READY EDTECH"
+                  className="border-muted/20 text-foreground"
+                />
+                <div className="space-y-4">
+                  <h1 className="font-headline text-4xl sm:text-6xl lg:text-8xl font-bold tracking-tight leading-[0.95]">
                     <EditableText
                       pageSlug="home"
                       sectionKey="hero"
@@ -280,19 +302,19 @@ export default function HomePage() {
                       as="span"
                     />
                   </h1>
-                  <p className="mx-auto max-w-2xl text-lg sm:text-xl text-muted-foreground leading-relaxed lg:mx-0">
+                  <p className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed lg:mx-0">
                     <EditableText
                       pageSlug="home"
                       sectionKey="hero"
                       contentKey="subtitle"
                       defaultValue="XmartyCreator helps creators learn production-grade development, build real portfolio projects, and grow with AI-guided support."
                       as="span"
-                      className="text-lg sm:text-xl leading-relaxed"
+                      className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed"
                     />
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <Button asChild size="lg" className="h-14 rounded-2xl px-8 text-base font-bold shadow-xl shadow-muted/20">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                  <Button asChild size="lg" className="h-11 sm:h-14 rounded-xl sm:rounded-2xl px-6 sm:px-8 text-sm sm:text-base font-bold shadow-xl shadow-muted/20">
                     <Link href="/courses">
                       <EditableText
                         pageSlug="home"
@@ -302,12 +324,12 @@ export default function HomePage() {
                         as="span"
                         className="inline-flex items-center"
                       />
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="h-14 rounded-2xl border-2 px-8 text-base font-bold">
+                  <Button asChild variant="outline" size="lg" className="h-11 sm:h-14 rounded-xl sm:rounded-2xl border-2 px-6 sm:px-8 text-sm sm:text-base font-bold">
                     <Link href="/community">
-                      <Play className="mr-2 h-5 w-5" />
+                      <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       <EditableText
                         pageSlug="home"
                         sectionKey="hero"
@@ -317,7 +339,7 @@ export default function HomePage() {
                       />
                     </Link>
                   </Button>
-                  <Button asChild variant="secondary" size="lg" className="h-14 rounded-2xl px-8 text-base font-bold">
+                  <Button asChild variant="secondary" size="lg" className="h-11 sm:h-14 rounded-xl sm:rounded-2xl px-6 sm:px-8 text-sm sm:text-base font-bold">
                     <Link href="/login">
                       <EditableText
                         pageSlug="home"
@@ -343,7 +365,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.55, delay: 0.1 }}
-                className="relative"
+                className="hidden lg:block relative"
               >
                 <div 
                   className="relative overflow-hidden rounded-[3rem] border-[10px] border-background shadow-2xl flex items-center justify-center"
@@ -421,19 +443,17 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="py-24 lg:py-32">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+        <section className="flex flex-col justify-center py-16 sm:py-20 lg:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14 w-full">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
               <div className="space-y-4">
-                <Badge variant="outline" className="border-muted/20 text-foreground">
-                  <EditableText
-                    pageSlug="home"
-                    sectionKey="pathways"
-                    contentKey="tag"
-                    defaultValue="LEARNING PATH"
-                    as="span"
-                  />
-                </Badge>
+                <CustomizableBadge
+                  pageSlug="home"
+                  sectionKey="pathways"
+                  badgeKey="tag"
+                  defaultText="LEARNING PATH"
+                  className="border-muted/20 text-foreground"
+                />
                 <h2 className="font-headline text-4xl lg:text-6xl font-bold tracking-tight">
                   <EditableText
                     pageSlug="home"
@@ -460,12 +480,12 @@ export default function HomePage() {
               {pathwayItems.map((item: any) => {
                 const Icon =
                   typeof item.icon === "string"
-                    ? {
+                    ? (({
                         BookOpen,
                         BrainCircuit,
                         Users,
                         BriefcaseBusiness,
-                      }[item.icon] ?? BookOpen
+                      } as Record<string, any>)[item.icon] ?? BookOpen)
                     : item.icon ?? BookOpen;
 
                 return (
@@ -490,11 +510,17 @@ export default function HomePage() {
 
         {/* Featured courses removed */}
 
-        <section className="py-24 lg:py-32 bg-muted/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="flex flex-col justify-center py-16 sm:py-20 lg:py-24 bg-muted/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="rounded-[3rem] bg-background p-8 md:p-12 shadow-2xl border border-primary/5 grid grid-cols-1 lg:grid-cols-[1fr_0.9fr] gap-10 items-center">
               <div className="space-y-6">
-                <Badge variant="outline" className="border-primary/20 text-primary">COMMUNITY POWER</Badge>
+                <CustomizableBadge
+                  pageSlug="home"
+                  sectionKey="community"
+                  badgeKey="badge"
+                  defaultText="COMMUNITY POWER"
+                  className="border-primary/20 text-primary"
+                />
                 <h2 className="font-headline text-4xl lg:text-6xl font-bold tracking-tight">
                   <EditableText
                     pageSlug="home"
@@ -514,13 +540,16 @@ export default function HomePage() {
                     className="text-lg leading-relaxed"
                   />
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {defaultCommunityFeatures.map((item) => (
-                    <div key={item.label} className="flex items-center gap-3 rounded-2xl border p-4">
-                      <item.icon className="h-5 w-5 text-primary" />
-                      <span className="text-sm font-bold">{item.label}</span>
-                    </div>
-                  ))}
+                <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                  {communityFeatures.map((item: any, idx: number) => {
+                    const IconComponent = typeof item.icon === 'string' ? (iconMap[item.icon] ?? MessageSquare) : (item.icon ?? MessageSquare);
+                    return (
+                      <div key={idx} className="flex items-center gap-2 rounded-xl border px-4 py-2.5 bg-background shadow-sm hover:border-primary/20 transition-colors shrink-0">
+                        <IconComponent className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-primary" />
+                        <span className="text-sm font-bold text-foreground">{item.label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <Button asChild variant="outline" size="lg" className="h-14 rounded-2xl border-2 px-8 font-bold">
                   <Link href="/community">
@@ -582,12 +611,16 @@ export default function HomePage() {
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-24 lg:py-32 bg-muted/10 border-t border-primary/5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+        <section className="flex flex-col justify-center py-16 sm:py-20 lg:py-24 bg-muted/10 border-t border-primary/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 w-full">
             <div className="text-center max-w-3xl mx-auto space-y-4">
-              <Badge variant="outline" className="border-primary/20 text-primary px-4 py-1 text-sm font-semibold rounded-full animate-pulse">
-                STUDENT REVIEWS
-              </Badge>
+              <CustomizableBadge
+                pageSlug="home"
+                sectionKey="testimonials"
+                badgeKey="badge"
+                defaultText="STUDENT REVIEWS"
+                className="border-primary/20 text-primary px-4 py-1 text-sm font-semibold rounded-full animate-pulse"
+              />
               <h2 className="font-headline text-4xl lg:text-6xl font-bold tracking-tight">
                 <EditableText
                   pageSlug="home"

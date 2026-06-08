@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter as useNextRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter as useNextRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useNextRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/profile';
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,8 +26,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password })
       });
       if (res.ok) {
-        router.push('/profile');
-        window.location.reload();
+        router.push(redirectUrl);
+        window.location.href = redirectUrl;
       } else {
         const err = await res.json();
         alert(err.error || 'Login failed');
@@ -38,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white">
+    <div className="w-full flex items-center justify-center p-4 py-16 relative overflow-hidden transition-colors duration-300 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white">
       
       {/* Background Lights (Only visible in Dark Mode for rich aesthetics) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none hidden dark:block">
@@ -192,4 +194,10 @@ export default function LoginPage() {
   );
 }
 
-
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="w-full min-h-screen flex items-center justify-center text-sm text-muted-foreground">Loading...</div>}>
+      <LoginPageInner />
+    </Suspense>
+  );
+}

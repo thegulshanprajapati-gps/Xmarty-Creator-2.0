@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Pencil, Save } from 'lucide-react';
 import { useContentBlock } from '@/hooks/use-content-block';
 import { cn } from '@/lib/utils';
+import { useCMS } from '@/components/cms-provider';
 
 type EditableTextProps = {
   pageSlug: string;
@@ -31,12 +32,19 @@ export function EditableText({
     defaultValue,
     'text'
   );
+  const { loading: cmsLoading } = useCMS();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const displayValue = useMemo(() => {
     const text = String(value || defaultValue || '');
     return text;
   }, [value, defaultValue]);
+
+  if (cmsLoading) {
+    return (
+      <span className={cn(className, "inline-block animate-pulse bg-muted dark:bg-zinc-800 rounded min-w-[60px] h-[1.2em] align-middle")} />
+    );
+  }
 
   const handleEdit = async () => {
     const next = window.prompt('Edit content for ' + contentKey, displayValue);

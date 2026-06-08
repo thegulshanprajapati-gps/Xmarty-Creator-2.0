@@ -46,7 +46,7 @@ Starts the development server with Next.js Turbopack enabled:
 ```bash
 npm run dev
 ```
-Open [http://localhost:9002](http://localhost:9002) in your browser to view the application.
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
 ### Production Build
 Performs database connectivity and schema validation checks first, then builds the application for production:

@@ -23,5 +23,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "supportdomain"]
+  "exclude": ["node_modules", "supportdomain", "src/firebase", "src/hooks/use-supabase-user.ts", "src/lib/supabase.ts"]
 }

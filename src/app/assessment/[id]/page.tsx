@@ -84,8 +84,8 @@ export default function AssessmentPage() {
 
   if (isFinished) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <main className="max-w-3xl mx-auto px-4 py-20">
+      <div className="bg-muted/30 py-16">
+        <main className="max-w-3xl mx-auto px-4 py-16">
           <Card className="text-center p-12 border-primary/20 shadow-2xl animate-fade-in">
             <Trophy className="h-24 w-24 text-accent mx-auto mb-6" />
             <h1 className="text-4xl font-headline font-bold mb-4">Assessment Complete!</h1>
@@ -103,7 +103,7 @@ export default function AssessmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background py-12">
       <main className="max-w-3xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
           <div className="space-y-1">

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Award, Users, Rocket, Heart, Twitter, Linkedin, Github } from "lucide-react";
 import { useContentBlock } from "@/hooks/use-content-block";
+import { CustomizableBadge } from "@/components/cms/customizable-badge";
 import Image from "next/image";
 
 export default function AboutPage() {
@@ -12,14 +13,16 @@ export default function AboutPage() {
   const seoKeywords = useContentBlock("about", "seo", "keywords", "about us, mission, story, xmartycreator", "text");
 
   const founderBadge = useContentBlock("about", "founder", "badge", "Meet Our Founder", "text");
-  const founderName = useContentBlock("about", "founder", "name", "Gulshan Kumar", "text");
+  const founderName = useContentBlock("about", "founder", "name", "Mukesh Raj", "text");
   const founderTitle = useContentBlock("about", "founder", "title", "Founder & CEO, XmartyCreator", "text");
   const founderQuote = useContentBlock("about", "founder", "quote", `"Our mission is simple: we don't just teach syntax, we forge digital architects who build production-grade, scalable software from day one."`, "text");
-  const founderBio = useContentBlock("about", "founder", "bio", `<p>Gulshan Kumar started XmartyCreator with a vision to revolutionize tech education. With years of experience leading engineering teams and building enterprise architectures, he realized that traditional coursework fails to prepare students for real-world software creation.</p><p>By introducing AI-mentorship (Vasant AI) and codebases that mirror real tech environments, he bridged the gap between learning and architectural execution. Under his leadership, XmartyCreator has grown into a global community.</p>`, "text");
+  const founderBio = useContentBlock("about", "founder", "bio", `<p>Mukesh Raj started XmartyCreator with a vision to revolutionize tech education. With years of experience leading engineering teams and building enterprise architectures, he realized that traditional coursework fails to prepare students for real-world software creation.</p><p>By introducing AI-mentorship (Vasant AI) and codebases that mirror real tech environments, he bridged the gap between learning and architectural execution. Under his leadership, XmartyCreator has grown into a global community.</p>`, "text");
+  const founderBackText = useContentBlock("about", "founder", "back_text", "We believe tech education is not about memorizing commands, but mastering software engineering principles that stand the test of time.", "text");
+  const founderBackAdditionalText = useContentBlock("about", "founder", "back_additional_text", "<p>Through hands-on system architecture challenges, live mentoring sessions, and open-source project contributions, we help you transition from a coder to a senior software architect.</p>", "text");
   const founderImageBlock = useContentBlock("about", "founder", "image", "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80", "text");
-  const founderTwitter = useContentBlock("about", "founder", "twitter", "#", "text");
-  const founderLinkedin = useContentBlock("about", "founder", "linkedin", "#", "text");
-  const founderGithub = useContentBlock("about", "founder", "github", "#", "text");
+  const founderTwitter = useContentBlock("about", "founder", "twitter", "https://twitter.com", "text");
+  const founderLinkedin = useContentBlock("about", "founder", "linkedin", "https://linkedin.com", "text");
+  const founderGithub = useContentBlock("about", "founder", "github", "https://github.com", "text");
 
   const getImageUrl = (imgBlockValue: any) => {
     if (!imgBlockValue) return "";
@@ -45,54 +48,76 @@ export default function AboutPage() {
 
   return (
     <div className="w-full">
+      <style>{`
+        .flip-card {
+          perspective: 1000px;
+        }
+        .flip-card-inner {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+          transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+          transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+          border-radius: 3rem;
+          overflow: hidden;
+        }
+        .flip-card-front {
+          transform: rotateY(0deg);
+        }
+        .flip-card-back {
+          transform: rotateY(180deg);
+        }
+      `}</style>
       <title>{seoTitle.value}</title>
       <meta name="description" content={seoDesc.value} />
       <meta name="keywords" content={seoKeywords.value} />
       <main className="bg-background text-foreground transition-colors duration-300">
         
         {/* Hero */}
-        <section className="py-24 relative overflow-hidden bg-slate-500/[0.02] border-b border-slate-200/40 dark:border-slate-800/40">
+        <section className="py-16 md:py-20 relative overflow-hidden bg-slate-500/[0.02] border-b border-slate-200/40 dark:border-slate-800/40">
           <div className="absolute top-0 right-1/4 w-[300px] h-[300px] bg-red-500/[0.04] rounded-full blur-3xl pointer-events-none" />
-          <div className="max-w-7xl mx-auto px-4 text-center space-y-8 relative z-10">
-            <Badge variant="outline" className="px-4 py-1 text-red-600 dark:text-red-500 border-red-200 dark:border-red-500/20 uppercase tracking-widest font-extrabold text-[10px] bg-red-500/5">WHO WE ARE</Badge>
-            <h1 className="text-6xl lg:text-8xl font-headline font-black tracking-tight leading-none text-slate-900 dark:text-white">
-              We are <span className="text-red-600 dark:text-red-500 relative">XmartyCreator</span>.
+          <div className="max-w-7xl mx-auto px-4 text-center space-y-8 relative z-10 animate-in fade-in slide-in-from-bottom-5 duration-700">
+            <CustomizableBadge
+              pageSlug="about"
+              sectionKey="hero"
+              badgeKey="badge"
+              defaultText="OUR STORY"
+              className="border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-500 bg-red-500/5"
+            />
+            <h1 className="text-5xl md:text-6xl font-headline font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+              Designing the Future of Tech Education
             </h1>
-            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed font-medium">
-              XmartyCreator is more than an EdTech platform; it's a launchpad for the next generation of digital architects and creators. We bridge the gap between academic theory and enterprise reality.
+            <p className="max-w-2xl mx-auto text-lg text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+              We empower builders, designers, and engineers to create state-of-the-art software systems with production-grade architectures.
             </p>
           </div>
         </section>
 
-        {/* Stats Section */}
-        <section className="py-12 border-b border-slate-200/40 dark:border-slate-800/40 bg-slate-500/[0.01]">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-              {[
-                { number: "45K+", label: "Active Students" },
-                { number: "150+", label: "Expert Courses" },
-                { number: "98%", label: "Satisfaction Rate" },
-                { number: "24/7", label: "AI Tutor Support" }
-              ].map((stat, i) => (
-                <div key={i} className="space-y-1.5">
-                  <h3 className="text-4xl lg:text-5xl font-black text-red-600 dark:text-red-500 font-headline tracking-tight">{stat.number}</h3>
-                  <p className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Story */}
-        <section className="py-32 border-b border-slate-200/40 dark:border-slate-800/40">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row items-center gap-20">
-            <div className="flex-1 space-y-8">
-              <Badge variant="outline" className="px-4 py-1 text-red-600 dark:text-red-500 border-red-200 dark:border-red-500/20 uppercase tracking-widest font-extrabold text-[10px] bg-red-500/5">Our Journey</Badge>
-              <h2 className="text-4xl lg:text-5xl font-headline font-black text-slate-900 dark:text-white leading-tight">Our Story</h2>
-              <div className="space-y-6 text-base text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                <p>
-                  XmartyCreator was born out of a simple observation: the tech industry was moving faster than traditional education could keep up. Students were graduating with skills that were already obsolete.
-                </p>
+        {/* Mission & Story */}
+        <section className="py-16 md:py-20 bg-background border-b border-slate-200/40 dark:border-slate-800/40 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1 space-y-6">
+              <CustomizableBadge
+                pageSlug="about"
+                sectionKey="story"
+                badgeKey="badge"
+                defaultText="OUR MISSION"
+                className="border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-500 bg-red-500/5"
+              />
+              <h2 className="text-4xl lg:text-5xl font-headline font-black text-slate-900 dark:text-white leading-tight">
+                For Creators, By Architects
+              </h2>
+              <div className="space-y-4 text-slate-600 dark:text-slate-400 text-sm md:text-base leading-relaxed font-medium">
                 <p>
                   In 2021, we set out to build a platform that treated learning like professional development. We didn't just want to teach code; we wanted to teach architectural thinking, scalability, and design excellence.
                 </p>
@@ -101,6 +126,7 @@ export default function AboutPage() {
                 </p>
               </div>
             </div>
+            
             <div className="flex-1 w-full relative aspect-video lg:aspect-square rounded-[3rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl">
               <Image src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80" alt="Team Workshop" fill className="object-cover" data-ai-hint="team work" />
             </div>
@@ -108,13 +134,17 @@ export default function AboutPage() {
         </section>
 
         {/* Founder Section */}
-        <section className="py-32 bg-slate-500/[0.01] border-b border-slate-200/40 dark:border-slate-800/40 relative overflow-hidden">
+        <section className="py-16 md:py-20 bg-slate-500/[0.01] border-b border-slate-200/40 dark:border-slate-800/40 relative overflow-hidden">
           <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[300px] h-[300px] bg-red-500/[0.03] rounded-full blur-3xl pointer-events-none" />
           <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row-reverse items-center gap-20 relative z-10">
             <div className="flex-1 space-y-6">
-              <Badge variant="outline" className="px-4 py-1 text-red-600 dark:text-red-500 border-red-200 dark:border-red-500/20 uppercase tracking-widest font-extrabold text-[10px] bg-red-500/5">
-                {String(founderBadge.value)}
-              </Badge>
+              <CustomizableBadge
+                pageSlug="about"
+                sectionKey="founder"
+                badgeKey="badge"
+                defaultText="MEET OUR FOUNDER"
+                className="border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-500 bg-red-500/5"
+              />
               <h2 className="text-4xl lg:text-5xl font-headline font-black text-slate-900 dark:text-white leading-tight">
                 {String(founderName.value)}
               </h2>
@@ -122,56 +152,91 @@ export default function AboutPage() {
                 {String(founderTitle.value)}
               </p>
               
-              <blockquote 
-                className="border-l-4 border-red-500 pl-4 italic text-base md:text-lg text-slate-700 dark:text-slate-300 font-medium"
-                dangerouslySetInnerHTML={{ __html: String(founderQuote.value) }}
-              />
-              
               <div 
-                className="space-y-4 text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-medium"
+                className="text-slate-600 dark:text-slate-400 text-sm md:text-base leading-relaxed font-medium"
                 dangerouslySetInnerHTML={{ __html: String(founderBio.value) }}
               />
-
-              {/* Founder Social Links */}
-              <div className="flex gap-3 pt-2">
-                {founderTwitter.value && founderTwitter.value !== "#" && (
-                  <a href={String(founderTwitter.value)} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-xl bg-slate-200/50 hover:bg-red-500/10 text-slate-700 hover:text-red-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-red-500 flex items-center justify-center transition-all">
-                    <Twitter className="h-5 w-5" />
-                  </a>
-                )}
-                {founderLinkedin.value && founderLinkedin.value !== "#" && (
-                  <a href={String(founderLinkedin.value)} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-xl bg-slate-200/50 hover:bg-red-500/10 text-slate-700 hover:text-red-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-red-500 flex items-center justify-center transition-all">
-                    <Linkedin className="h-5 w-5" />
-                  </a>
-                )}
-                {founderGithub.value && founderGithub.value !== "#" && (
-                  <a href={String(founderGithub.value)} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-xl bg-slate-200/50 hover:bg-red-500/10 text-slate-700 hover:text-red-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-red-500 flex items-center justify-center transition-all">
-                    <Github className="h-5 w-5" />
-                  </a>
-                )}
-              </div>
             </div>
             
-            <div className="flex-1 w-full relative max-w-sm aspect-[3/4] rounded-[3rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl group">
-              <Image 
-                src={getImageUrl(founderImageBlock.value)} 
-                alt={`${String(founderName.value)}, Founder`}
-                fill 
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+            <div className="flex-1 w-full max-w-sm aspect-[3/4] flip-card group cursor-pointer">
+              <div className="flip-card-inner">
+                {/* Front Face */}
+                <div className="flip-card-front border border-slate-200 dark:border-slate-800 shadow-xl relative w-full h-full bg-slate-100 dark:bg-slate-900">
+                  <Image 
+                    src={getImageUrl(founderImageBlock.value)} 
+                    alt={`${String(founderName.value)}, Founder`}
+                    fill 
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-x-0 bottom-6 flex justify-center pointer-events-none">
+                    <span className="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-white bg-slate-950/80 backdrop-blur-sm border border-white/10 shadow-lg animate-pulse">
+                      Hover to Flip 🔄
+                    </span>
+                  </div>
+                </div>
+
+                {/* Back Face */}
+                <div className="flip-card-back bg-gradient-to-br from-white via-slate-50 to-red-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-red-950/90 border border-slate-200 dark:border-red-500/20 shadow-2xl p-8 flex flex-col justify-between text-left">
+                  <div className="space-y-6 overflow-hidden flex flex-col flex-grow justify-center">
+                    <blockquote 
+                      className="border-l-4 border-red-500 pl-4 italic text-sm md:text-base text-slate-700 dark:text-slate-300 font-medium"
+                      dangerouslySetInnerHTML={{ __html: String(founderQuote.value) }}
+                    />
+                    <div className="space-y-3">
+                      {founderBackText.value && (
+                        <div 
+                          className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium"
+                          dangerouslySetInnerHTML={{ __html: String(founderBackText.value) }}
+                        />
+                      )}
+                      {founderBackAdditionalText.value && (
+                        <div 
+                          className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium"
+                          dangerouslySetInnerHTML={{ __html: String(founderBackAdditionalText.value) }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Social Links on Back */}
+                  <div className="flex gap-2.5 pt-4 border-t border-slate-200 dark:border-white/10 mt-auto shrink-0">
+                    {founderTwitter.value && founderTwitter.value !== "#" && (
+                      <a href={String(founderTwitter.value)} target="_blank" rel="noopener noreferrer" className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-red-500/25 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center transition-all border border-slate-200 dark:border-white/5">
+                        <Twitter className="h-4 w-4" />
+                      </a>
+                    )}
+                    {founderLinkedin.value && founderLinkedin.value !== "#" && (
+                      <a href={String(founderLinkedin.value)} target="_blank" rel="noopener noreferrer" className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-red-500/25 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center transition-all border border-slate-200 dark:border-white/5">
+                        <Linkedin className="h-4 w-4" />
+                      </a>
+                    )}
+                    {founderGithub.value && founderGithub.value !== "#" && (
+                      <a href={String(founderGithub.value)} target="_blank" rel="noopener noreferrer" className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-red-500/25 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center transition-all border border-slate-200 dark:border-white/5">
+                        <Github className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Values */}
-        <section className="py-32 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 relative overflow-hidden transition-colors duration-300 border-b border-slate-200/40 dark:border-slate-800/40">
+        <section className="py-16 md:py-20 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 relative overflow-hidden transition-colors duration-300 border-b border-slate-200/40 dark:border-slate-800/40">
           {/* Glow spots */}
           <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[350px] h-[350px] bg-red-500/10 dark:bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute top-1/3 right-1/4 -translate-y-1/2 w-[250px] h-[250px] bg-rose-500/5 dark:bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-4 space-y-16 relative z-10">
             <div className="text-center space-y-4 max-w-2xl mx-auto">
-              <Badge variant="outline" className="px-4 py-1 text-red-600 dark:text-red-500 border-red-200 dark:border-red-500/20 uppercase tracking-widest font-extrabold text-[10px] bg-red-500/5">Our Values</Badge>
+              <CustomizableBadge
+                pageSlug="about"
+                sectionKey="values"
+                badgeKey="badge"
+                defaultText="OUR VALUES"
+                className="border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-500 bg-red-500/5"
+              />
               <h2 className="text-4xl lg:text-5xl font-headline font-black tracking-tight text-slate-900 dark:text-white leading-tight">
                 The Pillars of Our Mission
               </h2>
@@ -197,10 +262,16 @@ export default function AboutPage() {
         </section>
 
         {/* FAQ */}
-        <section className="py-32 bg-slate-500/[0.01]">
+        <section className="py-16 md:py-20 bg-slate-500/[0.01]">
           <div className="max-w-4xl mx-auto px-4 space-y-16">
             <div className="text-center space-y-4">
-              <Badge variant="outline" className="px-4 py-1 text-red-600 dark:text-red-500 border-red-200 dark:border-red-500/20 uppercase tracking-widest font-extrabold text-[10px] bg-red-500/5">FAQ</Badge>
+              <CustomizableBadge
+                pageSlug="about"
+                sectionKey="faq"
+                badgeKey="badge"
+                defaultText="FAQ"
+                className="border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-500 bg-red-500/5"
+              />
               <h2 className="text-4xl lg:text-5xl font-headline font-black text-slate-900 dark:text-white">Frequently Asked Questions</h2>
               <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">Everything you need to know about the XmartyCreator ecosystem.</p>
             </div>

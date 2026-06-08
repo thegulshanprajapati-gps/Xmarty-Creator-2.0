@@ -18,7 +18,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
+    <div className="flex items-center justify-center px-4 py-16">
       <div className="max-w-2xl w-full text-center space-y-8 p-12 glass rounded-3xl border-destructive/20 shadow-2xl shadow-destructive/10">
         <div className="h-24 w-24 bg-destructive/10 rounded-full flex items-center justify-center mx-auto text-destructive">
           <AlertCircle className="h-12 w-12" />

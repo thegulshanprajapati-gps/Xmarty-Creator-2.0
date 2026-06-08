@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 
 export default function NotFound() {
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
+    <div className="flex items-center justify-center px-4 py-16">
       <div className="max-w-xl w-full text-center space-y-12">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}

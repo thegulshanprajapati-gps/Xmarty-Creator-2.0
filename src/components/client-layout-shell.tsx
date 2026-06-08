@@ -18,6 +18,41 @@ export function ClientLayoutShell({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (!mounted) return;
+    const startTime = Date.now();
+    
+    // Initial ping
+    fetch('/api/security/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ route: pathname, renderTime: 0 })
+    }).catch(() => {});
+
+    // Update time spent every 10 seconds
+    const interval = setInterval(() => {
+      fetch('/api/security/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ route: pathname, renderTime: 10 })
+      }).catch(() => {});
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      // Final flush
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      if (elapsed > 0) {
+        fetch('/api/security/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ route: pathname, renderTime: elapsed % 10 }),
+          keepalive: true
+        }).catch(() => {});
+      }
+    };
+  }, [pathname, mounted]);
+
   const isHome = pathname === '/';
   const shouldHideSiteChrome = false;
 
@@ -35,7 +70,7 @@ export function ClientLayoutShell({ children }: { children: React.ReactNode }) {
       <PageTransition onPendingChange={setIsPagePending}>
         <main
           className={cn(
-            "flex-1 w-full max-w-full overflow-x-hidden",
+            "flex-1 w-full max-w-full overflow-x-clip",
             !shouldHideSiteChrome && !isHome && "pt-20"
           )}
         >

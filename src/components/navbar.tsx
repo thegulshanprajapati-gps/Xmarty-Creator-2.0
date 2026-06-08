@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sun, Moon, Bell, Search, LogOut, User } from "lucide-react";
+import { Menu, X, Sun, Moon, Bell, Search, LogOut, User, Home, Info, BookOpen, Users, Newspaper, Mail, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import useTheme from '@/hooks/use-theme';
 import { cn } from "@/lib/utils";
@@ -36,6 +36,18 @@ export function Navbar() {
 
   useEffect(() => setMounted(true), []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const id = 'google-fonts-all-100';
+    if (!document.getElementById(id)) {
+      const link = document.createElement('link');
+      link.id = id;
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Abel&family=Abril+Fatface&family=Alfa+Slab+One&family=Alice&family=Amatic+SC&family=Anonymous+Pro&family=Archivo+Black&family=Arimo&family=Arizonia&family=Arvo&family=Asap&family=Assistant&family=Barlow&family=Bitter&family=Bree+Serif&family=Bricolage+Grotesque&family=Bungee&family=Cabin&family=Cardo&family=Caveat&family=Chivo&family=Cinzel&family=Comfortaa&family=Cormorant+Garamond&family=Courgette&family=Courier+Prime&family=Crimson+Text&family=Dancing+Script&family=DM+Sans&family=DM+Serif+Display&family=Domine&family=Dosis&family=EB+Garamond&family=Exo+2&family=Fira+Code&family=Fira+Sans&family=Fredoka&family=Garamond&family=Geist&family=Georgia&family=Gloria+Hallelujah&family=Gochi+Hand&family=Great+Vibes&family=Heebo&family=Hind&family=IBM+Plex+Mono&family=IBM+Plex+Sans&family=Inconsolata&family=Indie+Flower&family=Inter&family=JetBrains+Mono&family=Josefin+Sans&family=Kanit&family=Karla&family=Kaushan+Script&family=Lato&family=League+Script&family=Lexend&family=Libre+Baskerville&family=Libre+Franklin&family=Lobster&family=Lora&family=Lustria&family=Manrope&family=Maven+Pro&family=Merriweather&family=Montserrat&family=Mukta&family=Neuton&family=Noto+Sans&family=Noto+Serif&family=Nunito&family=Open+Sans&family=Oswald&family=Outfit&family=Overpass&family=Pacifico&family=Parisienne&family=Permanent+Marker&family=Playfair+Display&family=Plus+Jakarta+Sans&family=Poppins&family=Press+Start+2P&family=Quicksand&family=Raleway&family=Righteous&family=Roboto&family=Roboto+Mono&family=Sacramento&family=Satisfy&family=Space+Grotesk&family=Special+Elite&family=Spectral&family=Tangerine&family=Titan+One&family=Ubuntu&family=Urbanist&family=Varela+Round&family=Work+Sans&family=Yellowtail&family=Yeseva+One&display=swap';
+      document.head.appendChild(link);
+    }
+  }, []);
+
   const toggleTheme = async () => {
     const newMode = localTheme === 'dark' ? 'light' : 'dark';
     setTheme(newMode);
@@ -62,6 +74,15 @@ export function Navbar() {
     { labelKey: 'blog', defaultLabel: 'Blog', href: '/blog' },
     { labelKey: 'contact', defaultLabel: 'Contact', href: '/contact' },
   ];
+
+  const iconMap: Record<string, any> = {
+    '/': Home,
+    '/about': Info,
+    '/courses': BookOpen,
+    '/community': Users,
+    '/blog': Newspaper,
+    '/contact': Mail,
+  };
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -135,7 +156,7 @@ export function Navbar() {
           </div>
 
           <div className="hidden lg:flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild className="rounded-full h-10 w-10 text-muted-foreground hover:text-primary transition-colors">
+            <Button variant="ghost" size="icon" asChild className="rounded-full h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
               <Link href="/updates">
                 <Bell className="h-5 w-5" />
               </Link>
@@ -187,7 +208,21 @@ export function Navbar() {
           </div>
 
           <div className="lg:hidden flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild className="rounded-full h-10 w-10">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="rounded-full h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+            >
+              {mounted ? (localTheme === 'dark' ? (
+                <Sun className="h-5 w-5 text-primary" />
+              ) : (
+                <Moon className="h-5 w-5 text-foreground hover:text-primary" />
+              )) : (
+                <span className="h-5 w-5 inline-block" />
+              )}
+            </Button>
+            <Button variant="ghost" size="icon" asChild className="rounded-full h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
               <Link href="/updates">
                 <Bell className="h-5 w-5" />
               </Link>
@@ -206,26 +241,47 @@ export function Navbar() {
         "lg:hidden absolute top-full left-0 w-full bg-background border-b overflow-y-hidden transition-all duration-300 shadow-2xl z-50", 
         isOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
       )}>
-        <div className="px-6 py-10 space-y-4 bg-background">
-          {links.map((link) => (
-            <Link 
-              key={link.href} 
-              href={link.href} 
-              className={cn(
-                "block text-xl font-headline font-bold p-4 rounded-2xl transition-all active:scale-[0.98] motion-safe:active:scale-[0.98]",
-                pathname === link.href ? "bg-primary text-white shadow-xl shadow-primary/20" : "hover:bg-muted"
-              )}
-              onClick={() => setIsOpen(false)}
-            >
-              {link.defaultLabel}
-            </Link>
-          ))}
+        <div className="px-6 py-8 space-y-3 bg-background">
+          {links.map((link) => {
+            const IconComponent = iconMap[link.href] || Info;
+            const isActive = pathname === link.href;
+            return (
+              <Link 
+                key={link.href} 
+                href={link.href} 
+                className={cn(
+                  "flex items-center justify-between text-base font-bold p-3.5 rounded-2xl transition-all active:scale-[0.98] border border-transparent duration-300",
+                  isActive 
+                    ? "bg-gradient-to-r from-primary to-primary/85 text-white shadow-lg shadow-primary/20" 
+                    : "hover:bg-muted/60 text-foreground hover:border-primary/10"
+                )}
+                onClick={() => setIsOpen(false)}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "w-9 h-9 rounded-xl flex items-center justify-center transition-all",
+                    isActive ? "bg-white/20 text-white" : "bg-primary/5 text-primary"
+                  )}>
+                    <IconComponent className="h-4.5 w-4.5" />
+                  </div>
+                  <span>{link.defaultLabel}</span>
+                </div>
+                <ChevronRight className={cn("h-4.5 w-4.5 opacity-70", isActive ? "text-white" : "text-muted-foreground")} />
+              </Link>
+            );
+          })}
           <Link
             href={user ? "/profile" : "/login"}
-            className="block text-xl font-headline font-bold p-4 rounded-2xl transition-all hover:bg-muted"
+            className="flex items-center justify-between text-base font-bold p-3.5 rounded-2xl transition-all active:scale-[0.98] hover:bg-muted/60 text-foreground hover:border-primary/10 border border-transparent duration-300"
             onClick={() => setIsOpen(false)}
           >
-            {user ? "Profile" : "Login"}
+            <div className="flex items-center gap-4">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/5 text-primary">
+                <User className="h-4.5 w-4.5" />
+              </div>
+              <span>{user ? "Profile" : "Login"}</span>
+            </div>
+            <ChevronRight className="h-4.5 w-4.5 text-muted-foreground opacity-70" />
           </Link>
           {user && (
             <button
@@ -234,9 +290,15 @@ export function Navbar() {
                 setIsOpen(false);
                 handleSignOut();
               }}
-              className="w-full text-left text-xl font-headline font-bold p-4 rounded-2xl transition-all hover:bg-muted"
+              className="w-full flex items-center justify-between text-base font-bold p-3.5 rounded-2xl transition-all active:scale-[0.98] hover:bg-muted/60 text-foreground hover:border-primary/10 border border-transparent duration-300 text-left"
             >
-              Sign Out
+              <div className="flex items-center gap-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-destructive/10 text-destructive">
+                  <LogOut className="h-4.5 w-4.5" />
+                </div>
+                <span className="text-destructive">Sign Out</span>
+              </div>
+              <ChevronRight className="h-4.5 w-4.5 text-muted-foreground opacity-70" />
             </button>
           )}
         </div>
@@ -244,8 +306,8 @@ export function Navbar() {
       {searchOpen && (
         <div className="fixed inset-0 z-[200] flex items-start justify-center p-8">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSearchOpen(false)} />
-          <div className="relative w-full max-w-xl bg-background rounded-2xl shadow-2xl p-6">
-            <label className="flex items-center gap-3">
+          <div className="relative w-full max-w-xl bg-background rounded-2xl shadow-2xl p-6 border">
+            <div className="flex items-center gap-3 border-b pb-3">
               <Search className="h-5 w-5 text-muted-foreground" />
               <input
                 autoFocus
@@ -253,27 +315,44 @@ export function Navbar() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    if (results.length > 0) router.push(results[0].href);
-                    setSearchOpen(false);
+                    if (searchQuery.trim()) {
+                      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                      setSearchOpen(false);
+                    }
                   }
                   if (e.key === 'Escape') setSearchOpen(false);
                 }}
-                placeholder="Search pages... (Cmd/Ctrl+K)"
-                className="w-full bg-transparent outline-none text-lg"
+                placeholder="Search courses, blogs, content... (Cmd/Ctrl+K)"
+                className="w-full bg-transparent outline-none text-lg text-foreground"
               />
-            </label>
-
-            <div className="mt-4 space-y-2">
-              {results.length === 0 ? (
-                <div className="text-sm text-muted-foreground">No results</div>
-              ) : (
-                results.map((r) => (
-                  <a key={r.href} href={r.href} onClick={() => setSearchOpen(false)} className="block p-3 rounded-lg hover:bg-muted/10">
-                    <div className="font-bold">{r.label}</div>
-                    <div className="text-xs text-muted-foreground">{r.href}</div>
-                  </a>
-                ))
+              {searchQuery.trim() && (
+                <Button 
+                  size="sm" 
+                  onClick={() => {
+                    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                    setSearchOpen(false);
+                  }}
+                  className="rounded-xl bg-primary text-white text-xs font-bold px-3 py-1.5"
+                >
+                  Search
+                </Button>
               )}
+            </div>
+            
+            <div className="mt-4 space-y-1">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Suggestions</div>
+              {results.map((r) => (
+                <a key={r.href} href={r.href} onClick={() => setSearchOpen(false)} className="block p-2.5 rounded-xl hover:bg-muted/60 transition-colors flex items-center justify-between text-sm">
+                  <div>
+                    <span className="font-bold text-foreground">{r.defaultLabel}</span>
+                    <span className="text-xs text-muted-foreground ml-2">({r.href})</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-60" />
+                </a>
+              ))}
+              <div className="text-[10px] text-muted-foreground mt-4 text-center font-medium">
+                Type search query and press <strong>Enter</strong> to explore courses, blogs, and all page contents.
+              </div>
             </div>
           </div>
         </div>

@@ -59,7 +59,7 @@ export default function ProfilePage() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-[#04060E]">
+      <div className="w-full flex items-center justify-center bg-slate-50 dark:bg-[#04060E] py-16">
         <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">
           <i className="fa-solid fa-spinner animate-spin mr-2"></i>
           Loading profile...
@@ -70,7 +70,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center p-4 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white">
+      <div className="w-full flex items-center justify-center p-4 py-16 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white">
         <div className="text-center space-y-4 max-w-sm w-full bg-white dark:bg-slate-950/80 p-8 rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-xl">
           <div className="text-3xl text-primary">
             <i className="fa-solid fa-circle-exclamation"></i>
@@ -87,7 +87,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white">
+    <div className="w-full flex items-center justify-center p-4 py-16 relative overflow-hidden transition-colors duration-300 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white">
       
       {/* Background Lights (Dark Mode only) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none hidden dark:block">

@@ -14,8 +14,25 @@ export default function ContactPage() {
   const seoDesc = useContentBlock("contact", "seo", "description", "Get in touch with the XmartyCreator support and admissions team.", "text");
   const seoKeywords = useContentBlock("contact", "seo", "keywords", "contact, support, help, email, address", "text");
 
+  const badgeText = useContentBlock("contact", "hero", "badge", "Get In Touch", "text");
+  const titleText = useContentBlock("contact", "hero", "title", "How can we help?", "text");
+  const subtitleText = useContentBlock("contact", "hero", "subtitle", "Our orchestration support team and Vasant AI are active to assist with your educational pathway.", "text");
+
+  const platformHeading = useContentBlock("contact", "info", "heading", "Platform Channels", "text");
+  const platformSub = useContentBlock("contact", "info", "sub", "Have direct questions regarding course catalogs or active connections? Speak to our team.", "text");
+
+  const emailVal = useContentBlock("contact", "channels", "emailVal", "hello@xmartycreator.com", "text");
+  const emailDesc = useContentBlock("contact", "channels", "emailDesc", "Fast replies within 2-hour cycles.", "text");
+  const phoneVal = useContentBlock("contact", "channels", "phoneVal", "+91 98765 43210", "text");
+  const phoneDesc = useContentBlock("contact", "channels", "phoneDesc", "Available Mon-Fri (IST).", "text");
+  const addressVal = useContentBlock("contact", "channels", "addressVal", "Silicon Valley, Tech Hub Tower", "text");
+  const addressDesc = useContentBlock("contact", "channels", "addressDesc", "Central AI management operations.", "text");
+
+  const aiTitle = useContentBlock("contact", "ai", "title", "Vasant AI Agent", "text");
+  const aiSub = useContentBlock("contact", "ai", "sub", "Active 24/7. Monitoring ports.", "text");
+
   return (
-    <div className="w-full min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 transition-colors duration-300 pt-0">
+    <div className="w-full bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 transition-colors duration-300 py-10 sm:py-14">
       <title>{seoTitle.value}</title>
       <meta name="description" content={seoDesc.value} />
       <meta name="keywords" content={seoKeywords.value} />
@@ -24,13 +41,11 @@ export default function ContactPage() {
         {/* Hero Section - Super Compact & Premium */}
         <section className="text-center max-w-xl mx-auto space-y-3">
           <Badge className="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 px-2.5 py-0.5 rounded-md font-bold text-xs tracking-widest uppercase">
-            Get In Touch
+            {badgeText.value}
           </Badge>
-          <h1 className="text-3xl sm:text-4xl font-headline font-black tracking-tight text-slate-950 dark:text-white leading-tight">
-            How can we <span className="text-red-500 underline decoration-red-500/30 decoration-wavy underline-offset-4">help?</span>
-          </h1>
+          <h1 className="text-3xl sm:text-4xl font-headline font-black tracking-tight text-slate-950 dark:text-white leading-tight" dangerouslySetInnerHTML={{ __html: titleText.value }} />
           <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-            Our orchestration support team and Vasant AI are active to assist with your educational pathway.
+            {subtitleText.value}
           </p>
         </section>
 
@@ -40,9 +55,9 @@ export default function ContactPage() {
           {/* Contact Info */}
           <div className="lg:col-span-4 space-y-6">
             <div className="space-y-2">
-              <h3 className="text-xl font-bold text-slate-950 dark:text-white">Platform Channels</h3>
+              <h3 className="text-xl font-bold text-slate-950 dark:text-white">{platformHeading.value}</h3>
               <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-                Have direct questions regarding course catalogs or active connections? Speak to our team.
+                {platformSub.value}
               </p>
             </div>
 
@@ -50,20 +65,20 @@ export default function ContactPage() {
               <ContactInfoItem 
                 icon={Mail} 
                 title="Support Email" 
-                value="hello@xmartycreator.com" 
-                desc="Fast replies within 2-hour cycles." 
+                value={emailVal.value} 
+                desc={emailDesc.value} 
               />
               <ContactInfoItem 
                 icon={Phone} 
                 title="Direct Line" 
-                value="+91 98765 43210" 
-                desc="Available Mon-Fri (IST)." 
+                value={phoneVal.value} 
+                desc={phoneDesc.value} 
               />
               <ContactInfoItem 
                 icon={MapPin} 
                 title="HQ Orchestration" 
-                value="Silicon Valley, Tech Hub Tower" 
-                desc="Central AI management operations." 
+                value={addressVal.value} 
+                desc={addressDesc.value} 
               />
             </div>
 
@@ -73,8 +88,8 @@ export default function ContactPage() {
                   <Clock className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="font-bold text-sm">Vasant AI Agent</p>
-                  <p className="opacity-80 text-xs font-semibold">Active 24/7. Monitoring ports.</p>
+                  <p className="font-bold text-sm">{aiTitle.value}</p>
+                  <p className="opacity-80 text-xs font-semibold">{aiSub.value}</p>
                 </div>
               </CardContent>
             </Card>
@@ -106,9 +121,9 @@ export default function ContactPage() {
                 <div className="space-y-1">
                   <Label htmlFor="subject" className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Subject</Label>
                   <Input 
-                    id="subject" 
-                    placeholder="Course catalog configuration" 
-                    className="h-10 rounded-lg border border-slate-200 bg-slate-50 text-slate-950 dark:border-slate-800 dark:bg-slate-900/50 dark:text-white focus-visible:ring-red-500 focus-visible:ring-1 text-sm" 
+                     id="subject" 
+                     placeholder="Course catalog configuration" 
+                     className="h-10 rounded-lg border border-slate-200 bg-slate-50 text-slate-950 dark:border-slate-800 dark:bg-slate-900/50 dark:text-white focus-visible:ring-red-500 focus-visible:ring-1 text-sm" 
                   />
                 </div>
                 <div className="space-y-1">

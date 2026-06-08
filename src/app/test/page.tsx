@@ -9,7 +9,7 @@ export default function TestAccessPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-[#04060E]">
+      <div className="w-full flex items-center justify-center bg-slate-50 dark:bg-[#04060E] py-16">
         <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">
           <i className="fa-solid fa-spinner animate-spin mr-2"></i>
           Loading test access...
@@ -20,7 +20,7 @@ export default function TestAccessPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center p-4 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white">
+      <div className="w-full flex items-center justify-center p-4 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white py-16">
         <motion.div 
           initial={{ y: 15, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -43,7 +43,7 @@ export default function TestAccessPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white pt-24">
+    <div className="w-full flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300 bg-slate-50 dark:bg-[#04060E] text-slate-900 dark:text-white py-16">
       
       {/* Background Lights (Dark Mode only) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none hidden dark:block">
