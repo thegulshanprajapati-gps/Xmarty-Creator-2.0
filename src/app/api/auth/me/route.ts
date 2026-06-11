@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSession, signToken, setSession } from '@/lib/auth';
+import { getSession, signAccessToken, signRefreshToken, setSession, createCsrfToken } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
@@ -16,17 +16,23 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = (await getSession()) as any;
+    const session = await getSession();
     if (!session || !session.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { full_name, password } = await request.json();
+    const { full_name, password, mobile_number, profile_picture } = await request.json();
     const db = await getDb();
 
     const updateDoc: any = {};
     if (full_name !== undefined) {
       updateDoc.full_name = full_name;
+    }
+    if (mobile_number !== undefined) {
+      updateDoc.mobile_number = mobile_number;
+    }
+    if (profile_picture !== undefined) {
+      updateDoc.profile_picture = profile_picture;
     }
     if (password) {
       updateDoc.password_hash = await bcrypt.hash(password, 10);
@@ -39,10 +45,14 @@ export async function POST(request: Request) {
     if (session.id === 'dev-admin') {
       const payload = {
         ...session,
-        full_name: full_name || session.full_name
+        full_name: full_name || session.full_name,
+        mobile_number: mobile_number || session.mobile_number,
+        profile_picture: profile_picture || session.profile_picture
       };
-      const token = await signToken(payload);
-      await setSession(token);
+      const access = await signAccessToken(payload);
+      const refresh = await signRefreshToken(payload);
+      const csrf = await createCsrfToken();
+      await setSession(access, refresh, csrf);
       return NextResponse.json({ user: payload });
     }
 
@@ -59,11 +69,15 @@ export async function POST(request: Request) {
       id: updatedUser._id.toString(),
       email: updatedUser.email,
       full_name: updatedUser.full_name || '',
-      role: updatedUser.role || 'user'
+      role: updatedUser.role || 'user',
+      mobile_number: updatedUser.mobile_number || '',
+      profile_picture: updatedUser.profile_picture || ''
     };
 
-    const token = await signToken(payload);
-    await setSession(token);
+    const access = await signAccessToken(payload);
+    const refresh = await signRefreshToken(payload);
+    const csrf = await createCsrfToken();
+    await setSession(access, refresh, csrf);
 
     return NextResponse.json({ user: payload });
   } catch (error: any) {

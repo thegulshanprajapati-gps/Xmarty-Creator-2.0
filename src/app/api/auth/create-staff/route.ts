@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
-import { getSession } from '@/lib/auth';
+import { getSession, verifyCsrf } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const session = (await getSession()) as any;
+    const session = await getSession();
     
-    // Authorization: Only admin@xmartycreator.com (Super Admin) is allowed
-    if (!session || session.email !== 'admin@xmartycreator.com') {
+    // Authorization: Only the configured ADMIN_EMAIL (Super Admin) is allowed
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!session || !adminEmail || session.email !== adminEmail) {
       return NextResponse.json({ error: 'Unauthorized. Only the Super Admin can register staff members.' }, { status: 403 });
     }
+
+    const ok = await verifyCsrf(request);
+    if (!ok) return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
 
     const { email, password, full_name, role } = await request.json();
     
@@ -39,6 +43,9 @@ export async function POST(request: Request) {
       full_name,
       role: role,
       enrolled_courses: [],
+      two_factor_enabled: false,
+      totp_secret: null,
+      backup_codes: [],
       created_at: new Date()
     });
 

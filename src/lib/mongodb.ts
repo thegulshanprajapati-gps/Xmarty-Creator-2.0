@@ -22,7 +22,29 @@ if (process.env.NODE_ENV === 'development') {
 
 export default clientPromise;
 
+let indexesEnsured = false;
+
 export async function getDb(dbName = 'xmartycreator') {
   const conn = await clientPromise;
-  return conn.db(dbName);
+  const db = conn.db(dbName);
+  
+  if (!indexesEnsured) {
+    indexesEnsured = true;
+    // Asynchronously declare indexes for critical query path optimizations (Phase 11)
+    Promise.all([
+      db.collection("users").createIndex({ email: 1 }),
+      db.collection("exam_attempt_questions").createIndex({ sessionId: 1 }),
+      db.collection("exam_activity_logs").createIndex({ examId: 1, studentId: 1 }),
+      db.collection("notifications").createIndex({ userId: 1 }),
+    ]).catch(err => {
+      console.warn("Index creation failed or already exists:", err);
+    });
+  }
+
+  return db;
 }
+
+export async function getClient() {
+  return await clientPromise;
+}
+

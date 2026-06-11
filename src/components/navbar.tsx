@@ -23,9 +23,13 @@ export function Navbar() {
   const { user } = useUser();
 
   const handleSignOut = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/');
-    window.location.reload();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch {}
+    // Clear any localStorage session state
+    try { localStorage.removeItem('xmarty_session'); } catch {}
+    // Hard redirect — clears all React state so useUser() re-reads from cleared cookies
+    window.location.href = '/';
   };
 
   useEffect(() => {

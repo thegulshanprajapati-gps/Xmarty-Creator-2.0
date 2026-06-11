@@ -548,7 +548,7 @@ function MediaLibraryContent({ initialMode }: MediaLibraryShellProps) {
                 gridRef.current = node;
                 if (containerRef) (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
               }}
-              onPointerDown={handlePointerDown as any}
+              onPointerDown={handlePointerDown as unknown as React.PointerEventHandler<HTMLDivElement>}
               onDrop={handleDrop}
               onDragOver={event => event.preventDefault()}
               className="relative rounded-3xl border border-slate-800 bg-slate-950/90 p-4"

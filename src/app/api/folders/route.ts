@@ -19,6 +19,7 @@ export async function GET(request: Request) {
     } else {
       query.$or = [{ parent_folder_id: null }, { parent_folder_id: { $exists: false } }];
       query.visibility = 'Public';
+      query.approved = { $ne: false };
     }
 
     const folders = await db.collection('course_folders')
@@ -32,10 +33,10 @@ export async function GET(request: Request) {
 
       // Dynamic thumbnail lookup if root folder
       if (!f.parent_folder_id && !thumbnail_url) {
-        // Find subfolder named "thumbnail"
+        // Find subfolder named "thumbnail" or ".thumbnail"
         const thumbSubfolder = await db.collection('course_folders').findOne({
           parent_folder_id: idStr,
-          title: { $regex: /^thumbnail$/i }
+          title: { $regex: /^\.?thumbnail$/i }
         });
 
         if (thumbSubfolder) {

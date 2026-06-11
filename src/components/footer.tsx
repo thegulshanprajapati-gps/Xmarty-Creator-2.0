@@ -34,6 +34,7 @@ const defaultFooterLinks: FooterLinks = {
   ],
   support: [
     { label: 'Updates', href: '/updates' },
+    { label: 'Verify Certificate', href: '/verify-certificate' },
     { label: 'Contact', href: '/contact' },
     { label: 'FAQ', href: '/faq' },
   ],

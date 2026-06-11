@@ -127,7 +127,7 @@ export default function AboutPage() {
               </div>
             </div>
             
-            <div className="flex-1 w-full relative aspect-video lg:aspect-square rounded-[3rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl">
+            <div className="flex-1 w-full max-w-lg relative aspect-video lg:aspect-[4/3] rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl">
               <Image src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80" alt="Team Workshop" fill className="object-cover" data-ai-hint="team work" />
             </div>
           </div>

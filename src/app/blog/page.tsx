@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { Card, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Calendar, Clock, ArrowRight, BookOpen } from "lucide-react";
+import { Search, Calendar, Clock, ArrowRight, BookOpen, Star, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 function BlogCardSkeleton() {
   return (
@@ -53,9 +56,22 @@ function FeaturedSkeleton() {
 
 export default function BlogPage() {
   const [blogs, setBlogs] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch("/api/blogs/comments");
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+      }
+    } catch (e) {
+      console.error("Failed to load reviews:", e);
+    }
+  };
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -73,6 +89,7 @@ export default function BlogPage() {
       }
     };
     fetchBlogs();
+    fetchReviews();
   }, []);
 
   // Update Page Title / Tab Name dynamically
@@ -350,6 +367,199 @@ export default function BlogPage() {
         )}
 
       </main>
+
+      {/* User Reviews Section */}
+      <section className="border-t border-slate-200 dark:border-slate-800 pt-16 pb-24 space-y-10 max-w-5xl mx-auto px-4 relative z-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="space-y-2">
+            <Badge className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 px-3 py-1 rounded-full font-bold text-xs tracking-wider uppercase">
+              Reviews
+            </Badge>
+            <h2 className="text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight">
+              User Reviews & Blog Comments
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl font-medium">
+              Hear what our community has to say about our platform resources and recent articles.
+            </p>
+          </div>
+          
+          <ReviewDialog blogs={blogs} onReviewAdded={fetchReviews} />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {reviews.length === 0 ? (
+            <p className="text-sm text-slate-400 font-medium col-span-2 text-center py-6">No reviews submitted yet. Be the first to leave one!</p>
+          ) : (
+            reviews.map((rev: any) => (
+              <div key={rev.id || rev._id} className="p-6 rounded-2xl bg-white dark:bg-slate-950/40 border border-slate-150 dark:border-slate-850 shadow-sm flex flex-col justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-slate-900 dark:text-white">{rev.name}</h4>
+                    <span className="text-[10px] text-slate-400 font-bold">
+                      {rev.date ? new Date(rev.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                    </span>
+                  </div>
+                  {/* Stars */}
+                  <div className="flex items-center gap-0.5 text-amber-500">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          "h-3.5 w-3.5",
+                          i < Number(rev.rating) ? "fill-amber-500 text-amber-500" : "text-slate-200 dark:text-slate-800"
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-350 leading-relaxed italic">
+                    "{rev.comment}"
+                  </p>
+                </div>
+                
+                {rev.blogTitle && rev.blogId !== "general" && (
+                  <div className="border-t border-slate-100 dark:border-slate-800 pt-3 flex items-center justify-between text-xs">
+                    <span className="text-slate-400 font-medium">Commented on:</span>
+                    <Link
+                      href={`/blog/${rev.blogSlug || rev.blogId}`}
+                      className="text-red-500 hover:underline font-semibold flex items-center gap-1"
+                    >
+                      {rev.blogTitle} <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
     </div>
+  );
+}
+
+// ── Review Dialog Component ──
+function ReviewDialog({ blogs, onReviewAdded }: { blogs: any[]; onReviewAdded: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [comment, setComment] = useState("");
+  const [rating, setRating] = useState(5);
+  const [selectedBlog, setSelectedBlog] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !comment.trim()) return;
+
+    const matchedBlog = blogs.find(b => b.id === selectedBlog || b._id === selectedBlog);
+
+    const payload = {
+      blogId: matchedBlog ? (matchedBlog.id || matchedBlog._id) : "general",
+      blogTitle: matchedBlog ? matchedBlog.title : (selectedBlog || null),
+      blogSlug: matchedBlog ? (matchedBlog.slug || matchedBlog.id) : null,
+      name,
+      comment,
+      rating,
+    };
+
+    try {
+      const res = await fetch("/api/blogs/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setName("");
+        setComment("");
+        setRating(5);
+        setSelectedBlog("");
+        setOpen(false);
+        onReviewAdded();
+      }
+    } catch (err) {
+      console.error("Failed to submit review:", err);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-bold text-sm h-11 px-6 rounded-xl shadow-sm">
+          Write a Review
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-slate-950 dark:text-white">Leave your review</DialogTitle>
+          <DialogDescription className="text-xs text-slate-500">
+            Share your comments about our platform resources and recent articles.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Name</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Rahul Kumar"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Rating</label>
+            <div className="flex items-center gap-1 pt-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="text-xl focus:outline-none transition-transform active:scale-95"
+                >
+                  <Star
+                    className={cn(
+                      "h-6 w-6 text-amber-500",
+                      star <= rating ? "fill-amber-500 text-amber-500" : "text-slate-300 dark:text-slate-700"
+                    )}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Select Associated Blog</label>
+            <select
+              value={selectedBlog}
+              onChange={(e) => setSelectedBlog(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-red-500 dark:bg-slate-950"
+            >
+              <option value="" className="text-slate-400 dark:bg-slate-950">-- None / General Platform --</option>
+              {blogs.map((b) => (
+                <option key={b.id || b._id} value={b.id || b._id} className="dark:bg-slate-950">
+                  {b.title ? b.title.replace(/<[^>]*>/g, '') : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Comment / Review</label>
+            <textarea
+              required
+              rows={4}
+              placeholder="What did you think of the article or resources?"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-red-500 resize-none"
+            />
+          </div>
+
+          <Button type="submit" className="w-full h-11 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-sm transition-all shadow-md">
+            Submit Review
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

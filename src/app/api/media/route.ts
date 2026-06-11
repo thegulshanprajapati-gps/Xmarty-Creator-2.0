@@ -84,6 +84,30 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const headersList = request.headers;
+    const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
+    const userAgent = headersList.get('user-agent') || '';
+
+    // Enforce rate limiting on upload action
+    const { checkRateLimit } = await import('@/lib/rate-limiter');
+    const limiterResult = await checkRateLimit({
+      key: ip,
+      action: 'media_upload',
+      limit: 10, // Max 10 uploads per minute
+      windowMs: 60 * 1000
+    });
+    if (!limiterResult.allowed) {
+      const { logSecurityEvent } = await import('@/lib/audit');
+      await logSecurityEvent({
+        category: 'RATE_LIMIT_EXCEEDED',
+        ip,
+        userAgent,
+        status: 'WARN',
+        details: { action: 'media_upload' }
+      });
+      return NextResponse.json({ error: 'Too many uploads. Please slow down.' }, { status: 429 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file');
 
@@ -93,6 +117,61 @@ export async function POST(request: Request) {
 
     const folderId = formData.get('folderId')?.toString() || null;
     const folderName = formData.get('folderName')?.toString() || null;
+
+    // Deep MIME magic-byte verification (Inspect first 12 bytes of file)
+    const arrayBuffer = await file.arrayBuffer();
+    const fileHeaderBytes = new Uint8Array(arrayBuffer.slice(0, 12));
+    const headerHex = Array.from(fileHeaderBytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+
+    // Magic patterns definition
+    const signatures = {
+      PNG: '89504E470D0A1A0A',
+      JPG: 'FFD8FF',
+      WEBP_RIFF: '52494646', // RIFF
+      WEBP_HEADER: '57454250', // WEBP
+      PDF: '25504446' // %PDF
+    };
+
+    let detectedType = 'application/octet-stream';
+    if (headerHex.startsWith(signatures.PNG)) {
+      detectedType = 'image/png';
+    } else if (headerHex.startsWith(signatures.JPG)) {
+      detectedType = 'image/jpeg';
+    } else if (headerHex.startsWith(signatures.WEBP_RIFF) && headerHex.slice(16, 24) === signatures.WEBP_HEADER) {
+      detectedType = 'image/webp';
+    } else if (headerHex.startsWith(signatures.PDF)) {
+      detectedType = 'application/pdf';
+    }
+
+    // Verify if claimed mime type matches actual signature structure
+    const claimedType = file.type;
+    const isImageClaimed = claimedType.startsWith('image/');
+    const isImageDetected = detectedType.startsWith('image/');
+    
+    if ((isImageClaimed && !isImageDetected) || (!isImageClaimed && claimedType === 'application/pdf' && detectedType !== 'application/pdf')) {
+      const { logSecurityEvent } = await import('@/lib/audit');
+      await logSecurityEvent({
+        category: 'MIME_SPOOF',
+        ip,
+        userAgent,
+        status: 'ALERT',
+        details: { claimedType, detectedType, fileName: file.name }
+      });
+      return NextResponse.json({ error: 'Security violation: spoofed file headers detected.' }, { status: 400 });
+    }
+
+    // Enforce 3MB limit for thumbnail folder
+    const isThumbnailFolder = folderName?.toLowerCase() === '.thumbnail' || folderName?.toLowerCase() === 'thumbnail';
+    if (isThumbnailFolder) {
+      if (file.size > 3 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Thumbnail file size must not exceed 3MB.' }, { status: 400 });
+      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedTypes.includes(claimedType)) {
+        return NextResponse.json({ error: 'Thumbnail must be a valid image (JPEG, PNG, WEBP, or GIF).' }, { status: 400 });
+      }
+    }
+
     const tagsRaw = formData.get('tags')?.toString() || '';
     const tags = tagsRaw ? tagsRaw.split(',').map(tag => tag.trim()).filter(Boolean) : [];
     const name = formData.get('name')?.toString() || file.name;
@@ -100,6 +179,28 @@ export async function POST(request: Request) {
     const mediaType = mimeType.startsWith('video') ? 'video' : 'image';
     const size = file.size;
     const uploadedAt = new Date();
+
+    const db = await getDb();
+    const collection = db.collection('media_assets');
+
+    // If uploading to .thumbnail, enforce "only ONE image upload" requirement:
+    // Delete previous records in DB and disk for this folder.
+    if (isThumbnailFolder && folderId) {
+      const existingAssets = await collection.find({ folder_id: folderId }).toArray();
+      const fs = await import('fs');
+      const path = await import('path');
+      for (const asset of existingAssets) {
+        if (asset.url && asset.url.startsWith('/uploads/')) {
+          const filePath = path.join(process.cwd(), 'public', asset.url);
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+            }
+          } catch {}
+        }
+      }
+      await collection.deleteMany({ folder_id: folderId });
+    }
 
     let url = '';
     let thumbnailUrl = '';
@@ -135,9 +236,6 @@ export async function POST(request: Request) {
       url = `/uploads/${safeName}`;
       thumbnailUrl = url;
     }
-
-    const db = await getDb();
-    const collection = db.collection('media_assets');
     const item = {
       name,
       mime_type: mimeType,

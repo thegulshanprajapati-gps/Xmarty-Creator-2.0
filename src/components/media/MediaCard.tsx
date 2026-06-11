@@ -23,8 +23,7 @@ export default function MediaCard({ item, selected, onClick, onDoubleClick, onCo
       layout
       data-media-card={item.id}
       data-ignore-selection="true"
-      draggable
-      onDragStart={onDragStart as any}
+      onDragStart={onDragStart as unknown as (event: MouseEvent | TouchEvent | PointerEvent) => void}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}

@@ -8,6 +8,8 @@ export interface UserProfile {
   full_name?: string;
   role?: string;
   enrolled_courses?: string[];
+  mobile_number?: string;
+  profile_picture?: string;
 }
 
 export function useUser() {

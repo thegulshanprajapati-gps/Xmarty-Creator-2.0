@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
-import { getSession } from '@/lib/auth';
+import { getSession, verifyCsrf } from '@/lib/auth';
 
 export async function GET() {
   try {
@@ -29,6 +29,9 @@ export async function POST(request: Request) {
     if (!session || session.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const ok = await verifyCsrf(request);
+    if (!ok) return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
 
     const data = await request.json();
     const db = await getDb();

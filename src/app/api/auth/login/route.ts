@@ -1,11 +1,61 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
-import { signToken, setSession } from '@/lib/auth';
+import { signAccessToken, signRefreshToken, setSession, createCsrfToken } from '@/lib/auth';
+import { enforceDomainRoleRules } from '@/lib/permissions';
+import { writeAuditLog } from '@/lib/audit';
 import bcrypt from 'bcryptjs';
 
+// Simple in-memory throttling map: { key: { attempts: number, lastAttempt: number, lockedUntil?: number } }
+const failedAttempts: Record<string, { attempts: number; lastAttempt: number; lockedUntil?: number }> = {};
+
+function throttleKey(email: string, origin: string) {
+  return `${origin}::${email}`;
+}
+
+function isLocked(key: string) {
+  const record = failedAttempts[key];
+  if (!record) return false;
+  if (record.lockedUntil && Date.now() < record.lockedUntil) return true;
+  return false;
+}
+
+function registerFailedAttempt(key: string) {
+  const now = Date.now();
+  const rec = failedAttempts[key] || { attempts: 0, lastAttempt: 0 };
+  rec.attempts = (rec.attempts || 0) + 1;
+  rec.lastAttempt = now;
+  if (rec.attempts >= 5) {
+    // lock for 15 minutes
+    rec.lockedUntil = now + 15 * 60 * 1000;
+    rec.attempts = 0; // reset attempts after lock
+  }
+  failedAttempts[key] = rec;
+}
+
+function clearAttempts(key: string) {
+  delete failedAttempts[key];
+}
+
 export async function POST(request: Request) {
+  let email = 'unknown';
+  let origin = '';
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
+    email = body.email || 'unknown';
+    const password = body.password;
+
+    origin = request.headers.get('origin') || request.headers.get('host') || '';
+    const host = request.headers.get('host') || '';
+
+    // CSRF protection for login: validate origin when present
+    if (request.headers.get('origin')) {
+      const allowed = process.env.ALLOWED_ORIGIN || host;
+      if (!String(origin).includes(allowed) && !String(origin).includes(host)) {
+        return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
+      }
+    }
+    const tkey = throttleKey(email, origin);
+    if (isLocked(tkey)) return NextResponse.json({ error: 'Too many failed attempts. Try later.' }, { status: 429 });
     
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
@@ -14,20 +64,25 @@ export async function POST(request: Request) {
     const db = await getDb();
     const user = await db.collection('users').findOne({ email });
 
-    // In a real app we'd compare hash: await bcrypt.compare(password, user.password_hash)
-    // For this migration, we are assuming either they exist or we fallback to an admin bypass for dev
-    if (user && user.password_hash) {
-      const isValid = await bcrypt.compare(password, user.password_hash);
-      if (!isValid) {
-        return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    if (!user || !user.password_hash) {
+      const useDevFallback = process.env.NODE_ENV !== 'production';
+      const devAdminEmail = process.env.ADMIN_EMAIL;
+      const devAdminPassword = process.env.ADMIN_PASSWORD;
+      if (useDevFallback && devAdminEmail && devAdminPassword && email === devAdminEmail && password === devAdminPassword) {
+        const payload = { id: 'dev-admin', email, full_name: 'Super Admin', role: 'super-admin' };
+        const access = await signAccessToken(payload);
+        const refresh = await signRefreshToken(payload);
+        const csrf = await createCsrfToken();
+        await setSession(access, refresh, csrf);
+        return NextResponse.json({ user: payload });
       }
-    } else if (email === 'admin@xmartycreator.com' && password === 'admin123') {
-      // Fallback super-admin for development if DB is empty
-      const payload = { id: 'dev-admin', email, full_name: 'Super Admin', role: 'super-admin' };
-      const token = await signToken(payload);
-      await setSession(token);
-      return NextResponse.json({ user: payload });
-    } else {
+      registerFailedAttempt(tkey);
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    if (!isValid) {
+      registerFailedAttempt(tkey);
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -38,12 +93,34 @@ export async function POST(request: Request) {
       role: user.role || 'user'
     };
 
-    const token = await signToken(payload);
-    await setSession(token);
+    // Domain restrictions: don't allow instructor/student logins on supportdomain
+    const originHost = request.headers.get('host') || request.headers.get('origin') || '';
+    enforceDomainRoleRules(payload, originHost);
+
+    // Successful login: clear any failed attempts
+    clearAttempts(tkey);
+
+    const access = await signAccessToken(payload);
+    const refresh = await signRefreshToken(payload);
+    const csrf = await createCsrfToken();
+    await setSession(access, refresh, csrf);
+
+    // Write audit log
+    writeAuditLog(
+      request,
+      { id: payload.id, name: payload.full_name || payload.email, role: payload.role },
+      'USER_LOGIN',
+      { entity: 'users', id: payload.id },
+      { before: null, after: { email: payload.email, role: payload.role } },
+      'INFO'
+    ).catch(err => console.error('Audit logging err:', err));
 
     return NextResponse.json({ user: payload });
   } catch (error: any) {
     console.error('Login error:', error);
+    if (email && origin) {
+      registerFailedAttempt(throttleKey(email, origin));
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

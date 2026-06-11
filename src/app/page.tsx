@@ -17,6 +17,8 @@ import {
   Sparkles,
   Users,
   Star,
+  Award,
+  Video,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +29,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { EditableText } from "@/components/cms/editable-text";
 import { CustomizableBadge } from "@/components/cms/customizable-badge";
 import { useContentBlock } from "@/hooks/use-content-block";
+import { useUser } from "@/hooks/use-user";
+import { ClipboardList, CheckCircle2, XCircle, PlayCircle } from "lucide-react";
 
 const parseCmsImage = (val: any, defaultUrl: string) => {
   try {
@@ -114,6 +118,32 @@ const defaultCommunityFeatures = [
 ];
 
 export default function HomePage() {
+  const { user } = useUser();
+  const [allottedTests, setAllottedTests] = useState<any[]>([]);
+  const [attempts, setAttempts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      const fetchTestsData = async () => {
+        try {
+          const res1 = await fetch('/api/tests/allotted');
+          if (res1.ok) {
+            const data1 = await res1.json();
+            setAllottedTests(data1.tests || []);
+          }
+          const res2 = await fetch('/api/tests/attempts');
+          if (res2.ok) {
+            const data2 = await res2.json();
+            setAttempts(data2.attempts || []);
+          }
+        } catch (e) {
+          console.error("Failed to load allotted tests on home:", e);
+        }
+      };
+      fetchTestsData();
+    }
+  }, [user]);
+
   const seoTitleBlock = useContentBlock(
     "home",
     "seo",
@@ -173,6 +203,55 @@ export default function HomePage() {
     "community",
     "features",
     defaultCommunityFeatures,
+    "json"
+  );
+
+  const ctaTitleBlock = useContentBlock(
+    "home",
+    "cta",
+    "title",
+    "Ready to Build & Ship Real Projects?",
+    "text"
+  );
+  const ctaDescBlock = useContentBlock(
+    "home",
+    "cta",
+    "description",
+    "Get instant access to production-grade courses, 24/7 AI-guided mentorship, and a collaborative creator community.",
+    "text"
+  );
+  const ctaBtnBlock = useContentBlock(
+    "home",
+    "cta",
+    "buttonText",
+    "Start Learning Now",
+    "text"
+  );
+
+  const impactTitleBlock = useContentBlock(
+    "home",
+    "impact",
+    "title",
+    "Our Impact by the Numbers",
+    "text"
+  );
+  const impactDescBlock = useContentBlock(
+    "home",
+    "impact",
+    "description",
+    "Join thousands of learners who are transforming their careers and skills",
+    "text"
+  );
+  const impactStatsBlock = useContentBlock(
+    "home",
+    "impact",
+    "stats",
+    [
+      { label: "HAPPY STUDENTS", value: "19,332+", icon: "Users" },
+      { label: "EXPERT COURSES", value: "48+", icon: "BookOpen" },
+      { label: "HOURS OF CONTENT", value: "9,666+", icon: "Video" },
+      { label: "AWARDS WON", value: "5+", icon: "Award" }
+    ],
     "json"
   );
 
@@ -276,6 +355,66 @@ export default function HomePage() {
       <meta name="description" content={seoDescBlock.value} />
       <meta name="keywords" content={seoKeywordsBlock.value} />
       <main>
+        {user && allottedTests.length > 0 && (
+          <section className="bg-gradient-to-r from-primary/[0.03] to-accent/[0.03] border-b py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <ClipboardList className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-headline font-bold">Assigned Skill Assessments</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Complete your allotted tests to unlock certifications and course credentials.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allottedTests.map((test) => {
+                  const testAttempt = attempts.find(a => a.test_id === test.id);
+                  return (
+                    <Card key={test.id} className="border-muted/5 shadow-md rounded-[2rem] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 overflow-hidden bg-background">
+                      <div className="p-6 flex flex-col h-full justify-between gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Assessment ID: {test.id.slice(0,8)}</span>
+                            {testAttempt ? (
+                              testAttempt.passed ? (
+                                <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[9px] font-bold">Passed</Badge>
+                              ) : (
+                                <Badge className="bg-rose-500/10 text-rose-500 border-none text-[9px] font-bold">Failed</Badge>
+                              )
+                            ) : (
+                              <Badge className="bg-primary/10 text-primary border-none text-[9px] font-bold">Active</Badge>
+                            )}
+                          </div>
+                          <h3 className="text-lg font-headline font-bold text-foreground truncate">{test.title}</h3>
+                          {test.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{test.description}</p>
+                          )}
+                          <div className="flex gap-4 pt-2 text-[11px] font-bold text-slate-400">
+                            <span>⏱ {test.time_limit} mins</span>
+                            <span>❓ {test.questionCount} Questions</span>
+                          </div>
+                          {testAttempt && (
+                            <div className="p-3 rounded-xl bg-muted/20 border text-xs text-muted-foreground flex items-center justify-between font-bold">
+                              <span>Score:</span>
+                              <span className="text-foreground">{testAttempt.score}/{testAttempt.total_marks} ({testAttempt.percentage}%)</span>
+                            </div>
+                          )}
+                        </div>
+                        <Link href={`/test?id=${test.id}`}>
+                          <Button className="w-full h-11 rounded-xl font-bold text-xs" variant={testAttempt?.passed ? 'outline' : 'default'}>
+                            {testAttempt ? 'Retake Assessment' : 'Start Assessment'}
+                          </Button>
+                        </Link>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="relative overflow-hidden border-b bg-muted/20 flex flex-col justify-center py-16 sm:py-20 lg:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-[1.02fr_0.98fr] gap-14 lg:gap-20 items-center">
@@ -610,6 +749,90 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Impact Stats Section */}
+        <section className="flex flex-col justify-center py-16 sm:py-20 lg:py-24 bg-background">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 w-full">
+            <div className="text-center max-w-3xl mx-auto space-y-4">
+              <CustomizableBadge
+                pageSlug="home"
+                sectionKey="impact"
+                badgeKey="badge"
+                defaultText="PROVEN EXCELLENCE"
+                className="border-primary/20 text-primary px-4 py-1 text-sm font-semibold rounded-full bg-primary/5"
+              />
+              <h2 className="font-headline text-4xl lg:text-6xl font-bold tracking-tight">
+                <EditableText
+                  pageSlug="home"
+                  sectionKey="impact"
+                  contentKey="heading"
+                  defaultValue="Our Impact by the Numbers"
+                  as="span"
+                />
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                <EditableText
+                  pageSlug="home"
+                  sectionKey="impact"
+                  contentKey="subtitle"
+                  defaultValue="Join thousands of learners who are transforming their careers and skills"
+                  as="span"
+                  className="text-lg text-muted-foreground"
+                />
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+              {(() => {
+                const stats = Array.isArray(impactStatsBlock.value) ? impactStatsBlock.value : [
+                  { label: "HAPPY STUDENTS", value: "19,332+", icon: "Users" },
+                  { label: "EXPERT COURSES", value: "48+", icon: "BookOpen" },
+                  { label: "HOURS OF CONTENT", value: "9,666+", icon: "Video" },
+                  { label: "AWARDS WON", value: "5+", icon: "Award" }
+                ];
+                
+                return stats.map((stat: any, index: number) => {
+                  const Icon = ({
+                    Users,
+                    BookOpen,
+                    Video,
+                    Award
+                  } as Record<string, any>)[stat.icon] ?? Award;
+
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      className="border border-border/60 bg-background rounded-[2.25rem] p-8 relative overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 group"
+                    >
+                      {/* Top-right faint outline icon */}
+                      <Icon className="absolute top-6 right-6 text-primary/5 w-16 h-16 pointer-events-none group-hover:scale-110 group-hover:text-primary/10 transition-all duration-300" />
+                      
+                      <div className="space-y-6">
+                        {/* Red container icon */}
+                        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground shadow-md shadow-primary/20">
+                          <Icon className="w-5 h-5" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
+                            {stat.value}
+                          </p>
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            {stat.label}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </section>
+
         {/* Testimonials Section */}
         <section className="flex flex-col justify-center py-16 sm:py-20 lg:py-24 bg-muted/10 border-t border-primary/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 w-full">
@@ -832,6 +1055,80 @@ export default function HomePage() {
                 </div>
               </div>
             )}
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="relative flex flex-col justify-center py-16 sm:py-20 lg:py-24 overflow-hidden border-t border-primary/5">
+          {/* Ambient light glow in the background */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+          
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative rounded-[2.5rem] bg-gradient-to-br from-primary via-primary/95 to-zinc-950 p-8 md:p-16 text-center text-primary-foreground shadow-2xl border border-primary/20 overflow-hidden group"
+            >
+              {/* Animated/Interactive decorative background shapes */}
+              <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700 pointer-events-none" />
+              <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative space-y-6 max-w-2xl mx-auto">
+                <CustomizableBadge
+                  pageSlug="home"
+                  sectionKey="cta"
+                  badgeKey="badge"
+                  defaultText="START YOUR JOURNEY"
+                  className="border-white/20 text-white mx-auto backdrop-blur-sm"
+                />
+                
+                <h2 className="font-headline text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+                  <EditableText
+                    pageSlug="home"
+                    sectionKey="cta"
+                    contentKey="title"
+                    defaultValue="Ready to Build & Ship Real Projects?"
+                    as="span"
+                  />
+                </h2>
+                
+                <p className="text-sm sm:text-base md:text-lg text-white/80 leading-relaxed max-w-xl mx-auto">
+                  <EditableText
+                    pageSlug="home"
+                    sectionKey="cta"
+                    contentKey="description"
+                    defaultValue="Get instant access to production-grade courses, 24/7 AI-guided mentorship, and a collaborative creator community."
+                    as="span"
+                  />
+                </p>
+
+                <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      asChild
+                      size="lg"
+                      className="h-14 rounded-2xl bg-white text-primary hover:bg-white/90 font-bold px-8 shadow-xl hover:shadow-white/10 transition-all duration-300 group/btn"
+                    >
+                      <Link href="/courses">
+                        <EditableText
+                          pageSlug="home"
+                          sectionKey="cta"
+                          contentKey="buttonText"
+                          defaultValue="Start Learning Now"
+                          as="span"
+                        />
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
+                      </Link>
+                    </Button>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </section>
       </main>

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
-import { signToken, setSession } from '@/lib/auth';
+import { signAccessToken, signRefreshToken, setSession, createCsrfToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
@@ -38,8 +38,10 @@ export async function POST(request: Request) {
       role: assignedRole
     };
 
-    const token = await signToken(payload);
-    await setSession(token);
+    const access = await signAccessToken(payload);
+    const refresh = await signRefreshToken(payload);
+    const csrf = await createCsrfToken();
+    await setSession(access, refresh, csrf);
 
     return NextResponse.json({ user: payload });
   } catch (error: any) {

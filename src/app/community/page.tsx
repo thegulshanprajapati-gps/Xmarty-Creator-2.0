@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Users, Sparkles, Send, Play, Download, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@/hooks/use-user";
+import { cn } from "@/lib/utils";
 
 export default function CommunityPage() {
+  const { user } = useUser();
   // SEO Content Blocks
   const seoTitle = useContentBlock("community", "seo", "title", "Community - XmartyCreator", "text");
   const seoDesc = useContentBlock("community", "seo", "description", "Join the XmartyCreator community. Connect, learn, build and grow together.", "text");
@@ -45,56 +48,6 @@ export default function CommunityPage() {
   const channelsAppLink = useContentBlock("community", "channels", "appLink", "#", "text");
   const channelsTelegramLink = useContentBlock("community", "channels", "telegramLink", "#", "text");
   const channelsYoutubeLink = useContentBlock("community", "channels", "youtubeLink", "#", "text");
-
-  // User reviews states & hooks
-  const [blogs, setBlogs] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
-
-  const refreshReviews = () => {
-    const saved = localStorage.getItem("community_reviews");
-    if (saved) {
-      setReviews(JSON.parse(saved));
-    } else {
-      const defaultReviews = [
-        {
-          id: "1",
-          name: "Aarav Sharma",
-          rating: "5",
-          comment: "This platform is absolutely amazing! The Kushal Yuva Program (KYP) details helped me register without any issues.",
-          blogTitle: "Kushal Yuva Program (KYP) Complete Enrollment Guide",
-          blogSlug: "kyp-complete-enrollment-guide",
-          date: "Jun 5, 2026"
-        },
-        {
-          id: "2",
-          name: "Neha Patel",
-          rating: "5",
-          comment: "I love the detailed content modules. The instructions are so clear, and the resource downloads work perfectly.",
-          blogTitle: "Next.js Production-Grade Best Practices",
-          blogSlug: "nextjs-production-grade-best-practices",
-          date: "May 28, 2026"
-        }
-      ];
-      localStorage.setItem("community_reviews", JSON.stringify(defaultReviews));
-      setReviews(defaultReviews);
-    }
-  };
-
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const res = await fetch("/api/blogs");
-        if (res.ok) {
-          const data = await res.json();
-          setBlogs(data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch blogs:", err);
-      }
-    };
-    fetchBlogs();
-    refreshReviews();
-  }, []);
 
   return (
     <div className="w-full bg-[#FAFCFF] dark:bg-[#030712] text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -144,8 +97,8 @@ export default function CommunityPage() {
         <section className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           {/* Left Column info */}
           <div className="space-y-6">
-            <Badge className="bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800 px-3 py-1 rounded-full font-bold text-xs tracking-wider flex items-center gap-1.5 w-fit">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+            <Badge className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 px-3 py-1 rounded-full font-bold text-xs tracking-wider flex items-center gap-1.5 w-fit">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
               {String(heroBadge.value)}
             </Badge>
 
@@ -185,8 +138,8 @@ export default function CommunityPage() {
 
           {/* Right Column visual: triangle node graphic inside soft container */}
           <div className="flex justify-center md:justify-end">
-            <div className="relative w-full max-w-sm aspect-[4/3] rounded-3xl bg-[#F0F5FF] dark:bg-[#111827] flex items-center justify-center border border-[#E0EBFD] dark:border-slate-800/80 shadow-inner">
-              <svg width="220" height="220" viewBox="0 0 200 200" className="text-rose-500/85 dark:text-rose-400/85 node-container-float">
+            <div className="relative w-full max-w-sm aspect-[4/3] rounded-3xl bg-primary/5 dark:bg-slate-950/40 flex items-center justify-center border border-primary/10 dark:border-white/5 shadow-inner">
+              <svg width="220" height="220" viewBox="0 0 200 200" className="text-primary/80 dark:text-primary/80 node-container-float">
                 {/* SVG Connections with Flow animation */}
                 <line x1="100" y1="45" x2="50" y2="140" stroke="currentColor" strokeWidth="2" className="node-flow-line" />
                 <line x1="100" y1="45" x2="150" y2="140" stroke="currentColor" strokeWidth="2" className="node-flow-line" />
@@ -223,17 +176,28 @@ export default function CommunityPage() {
 
         {/* 3. Community Hub CTA Banner */}
         <section>
-          <div className="w-full bg-gradient-to-r from-blue-550/10 to-indigo-500/10 bg-[#EEF2F6] dark:bg-[#1E1B4B]/10 border border-[#D5E1FF] dark:border-slate-800 p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="w-full bg-gradient-to-r from-primary/10 to-accent/10 bg-slate-50 dark:bg-slate-950/20 border border-primary/10 dark:border-white/5 p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center md:text-left">
-              <Badge className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold px-2.5 py-0.5 rounded-full text-xs">
-                {String(hubBadge.value)}
+              <Badge className={cn(
+                "font-bold px-2.5 py-0.5 rounded-full text-xs border",
+                user 
+                  ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" 
+                  : "bg-primary/10 text-primary border-primary/20"
+              )}>
+                {user ? "Active Hub" : String(hubBadge.value)}
               </Badge>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{String(hubTitle.value)}</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl">{String(hubDesc.value)}</p>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                {user ? "Your Community Hub is Active" : String(hubTitle.value)}
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl">
+                {user 
+                  ? "You have full access to all chat groups, mobile apps, updates and exclusive tutorials." 
+                  : String(hubDesc.value)}
+              </p>
             </div>
-            <Button asChild className="bg-white hover:bg-slate-50 text-blue-600 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-blue-400 border border-[#CBD5E1] dark:border-slate-800 font-bold text-xs h-11 px-5 rounded-xl shrink-0 gap-1 shadow-sm">
-              <Link href={String(hubButtonLink.value)}>
-                {String(hubButtonText.value)} <span className="text-sm">→</span>
+            <Button asChild className="bg-primary hover:bg-primary/95 text-white dark:bg-primary dark:hover:bg-primary/90 font-bold text-xs h-11 px-5 rounded-xl shrink-0 gap-1 shadow-sm">
+              <Link href={user ? "/community/hub" : `/login?redirect=${encodeURIComponent("/community/hub")}`}>
+                {user ? "Open Hub Dashboard" : "Login to Access"} <span className="text-sm">→</span>
               </Link>
             </Button>
           </div>
@@ -242,7 +206,7 @@ export default function CommunityPage() {
         {/* 4. Benefits Section ("Learn, build, and grow together") */}
         <section className="space-y-10">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
-            <Badge className="bg-blue-50 dark:bg-slate-900 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-slate-800 px-3 py-1 rounded-full font-bold text-xs tracking-wider uppercase">
+            <Badge className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full font-bold text-xs tracking-wider uppercase">
               {String(benefitsBadge.value)}
             </Badge>
             <h2 className="text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight">
@@ -256,7 +220,7 @@ export default function CommunityPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Card 1: Instant updates */}
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 shadow-sm space-y-4 hover:shadow-md transition-shadow">
-              <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/30 rounded-xl flex items-center justify-center text-blue-500">
+              <div className="h-10 w-10 bg-primary/10 dark:bg-primary/25 rounded-xl flex items-center justify-center text-primary">
                 <Send className="h-5 w-5" />
               </div>
               <div className="space-y-1.5">
@@ -269,7 +233,7 @@ export default function CommunityPage() {
 
             {/* Card 2: Peer power */}
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 shadow-sm space-y-4 hover:shadow-md transition-shadow">
-              <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/30 rounded-xl flex items-center justify-center text-blue-500">
+              <div className="h-10 w-10 bg-primary/10 dark:bg-primary/25 rounded-xl flex items-center justify-center text-primary">
                 <Users className="h-5 w-5" />
               </div>
               <div className="space-y-1.5">
@@ -282,7 +246,7 @@ export default function CommunityPage() {
 
             {/* Card 3: Exclusive goodies */}
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 shadow-sm space-y-4 hover:shadow-md transition-shadow">
-              <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/30 rounded-xl flex items-center justify-center text-blue-500">
+              <div className="h-10 w-10 bg-primary/10 dark:bg-primary/25 rounded-xl flex items-center justify-center text-primary">
                 <Sparkles className="h-5 w-5" />
               </div>
               <div className="space-y-1.5">
@@ -298,7 +262,7 @@ export default function CommunityPage() {
         {/* 5. Pick your favorite channel section */}
         <section className="space-y-10">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
-            <Badge className="bg-blue-50 dark:bg-slate-900 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-slate-800 px-3 py-1 rounded-full font-bold text-xs tracking-wider uppercase">
+            <Badge className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full font-bold text-xs tracking-wider uppercase">
               {String(channelsBadge.value)}
             </Badge>
             <h2 className="text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight">
@@ -404,193 +368,7 @@ export default function CommunityPage() {
             </div>
           </div>
         </section>
-
-        {/* 6. User Reviews Section */}
-        <section className="border-t border-slate-200 dark:border-slate-800 pt-16 space-y-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-2">
-              <Badge className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 px-3 py-1 rounded-full font-bold text-xs tracking-wider uppercase">
-                Reviews
-              </Badge>
-              <h2 className="text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight">
-                User Reviews & Blog Comments
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl font-medium">
-                Hear what our community has to say about our platform resources and recent articles.
-              </p>
-            </div>
-            
-            {/* Modal Dialog Trigger */}
-            <ReviewDialog blogs={blogs} onReviewAdded={refreshReviews} />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {reviews.length === 0 ? (
-              <p className="text-sm text-slate-400 font-medium col-span-2 text-center py-6">No reviews submitted yet. Be the first to leave one!</p>
-            ) : (
-              reviews.map((rev: any) => (
-                <div key={rev.id} className="p-6 rounded-2xl bg-white dark:bg-slate-950/40 border border-slate-150 dark:border-slate-850 shadow-sm flex flex-col justify-between gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-slate-900 dark:text-white">{rev.name}</h4>
-                      <span className="text-[10px] text-slate-400 font-bold">{rev.date}</span>
-                    </div>
-                    {/* Stars */}
-                    <div className="flex items-center gap-0.5 text-amber-500">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <i
-                          key={i}
-                          className={cn(
-                            "fa-solid fa-star text-xs",
-                            i < Number(rev.rating) ? "text-amber-500" : "text-slate-200 dark:text-slate-800"
-                          )}
-                        ></i>
-                      ))}
-                    </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-355 leading-relaxed italic">
-                      "{rev.comment}"
-                    </p>
-                  </div>
-                  
-                  {rev.blogTitle && (
-                    <div className="border-t border-slate-100 dark:border-slate-800 pt-3 flex items-center justify-between text-xs">
-                      <span className="text-slate-400 font-medium">Commented on:</span>
-                      <Link
-                        href={`/blog/${rev.blogSlug || rev.blogTitle}`}
-                        className="text-blue-500 hover:underline font-semibold flex items-center gap-1"
-                      >
-                        {rev.blogTitle} <ExternalLink className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-
       </main>
     </div>
-  );
-}
-
-// ── Review Dialog Component ──
-import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-
-function ReviewDialog({ blogs, onReviewAdded }: { blogs: any[]; onReviewAdded: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [comment, setComment] = useState("");
-  const [rating, setRating] = useState(5);
-  const [selectedBlog, setSelectedBlog] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !comment.trim()) return;
-
-    const matchedBlog = blogs.find(b => b.id === selectedBlog || b.title === selectedBlog);
-
-    const newReview = {
-      id: String(Date.now()),
-      name,
-      comment,
-      rating,
-      blogTitle: matchedBlog ? matchedBlog.title : selectedBlog || null,
-      blogSlug: matchedBlog ? (matchedBlog.slug || matchedBlog.id) : null,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    };
-
-    const current = localStorage.getItem("community_reviews");
-    const list = current ? JSON.parse(current) : [];
-    list.unshift(newReview);
-    localStorage.setItem("community_reviews", JSON.stringify(list));
-
-    // Reset values
-    setName("");
-    setComment("");
-    setRating(5);
-    setSelectedBlog("");
-    setOpen(false);
-    onReviewAdded();
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-bold text-sm h-11 px-6 rounded-xl shadow-sm">
-          Write a Review
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Leave your review</DialogTitle>
-          <DialogDescription className="text-xs text-slate-500">
-            Share your comments about our platform resources and recent articles.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Name</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Rahul Kumar"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Rating</label>
-            <div className="flex items-center gap-1 pt-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  className="text-xl focus:outline-none transition-transform active:scale-95"
-                >
-                  <i className={cn("fa-star text-amber-500", star <= rating ? "fa-solid" : "fa-regular")}></i>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Select Associated Blog</label>
-            <select
-              value={selectedBlog}
-              onChange={(e) => setSelectedBlog(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-950"
-            >
-              <option value="" className="text-slate-400 dark:bg-slate-950">-- None / General Platform --</option>
-              {blogs.map((b) => (
-                <option key={b.id} value={b.id} className="dark:bg-slate-950">
-                  {b.title.replace(/<[^>]*>/g, '')}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Comment / Review</label>
-            <textarea
-              required
-              rows={4}
-              placeholder="What did you think of the article or resources?"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="w-full p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-            />
-          </div>
-
-          <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-all shadow-md">
-            Submit Review
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }

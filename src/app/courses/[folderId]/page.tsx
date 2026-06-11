@@ -11,6 +11,9 @@ import Image from 'next/image';
 import { formatINR } from '@/lib/format';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { generateFingerprint, createSecureAccessToken } from '@/lib/secure-token';
+import { SessionUser } from '@/types/auth';
 import { CourseFileViewer } from '@/components/course-file-viewer';
 
 type Props = {
@@ -45,6 +48,15 @@ export async function generateMetadata({ params }: Props) {
 export default async function CourseFolderPage({ params }: Props) {
   const { folderId } = await params;
 
+  const reqHeaders = await headers();
+  const userAgent = reqHeaders.get('user-agent') || '';
+  const ip = reqHeaders.get('x-forwarded-for') || '127.0.0.1';
+  const fingerprint = generateFingerprint(userAgent, ip);
+
+  const session = (await getSession()) as SessionUser | null;
+  const sessionEmail = session?.email || '';
+  const sessionEmailLower = sessionEmail.toLowerCase();
+
   const isMongoId = ObjectId.isValid(String(folderId));
   const db = await getDb();
   
@@ -58,7 +70,6 @@ export default async function CourseFolderPage({ params }: Props) {
 
   // If this is a subfolder (section/module within a course), restrict access to registered/logged-in users.
   if (folder && folder.parent_folder_id) {
-    const session = await getSession();
     if (!session) {
       // Redirect to login with a ?redirect= param so user is bounced back after sign-in
       const returnUrl = encodeURIComponent(`/courses/${folderId}`);
@@ -66,17 +77,43 @@ export default async function CourseFolderPage({ params }: Props) {
     }
   }
 
+  // Prevent student/public access to unapproved courses
+  if (folder && folder.approved === false) {
+    const canViewUnapproved = session && (session.role === 'instructor' || session.role === 'admin' || session.role === 'super_admin' || session.role === 'staff' || session.role === 'support');
+    if (!canViewUnapproved) {
+      redirect('/unauthorized?reason=unapproved_course');
+    }
+  }
+
   const realFolderId = folder?._id?.toString() || null;
+
+  // Record telemetry traffic view on server load
+  if (folder) {
+    db.collection('security_logs').insertOne({
+      ip,
+      route: `/courses/${folder.slug || realFolderId}`,
+      renderTime: 1,
+      userAgent,
+      timestamp: new Date()
+    }).catch(() => {});
+  }
 
   // Retrieve sub-sections/lessons and files
   let subfolders: any[] = [];
   let contents: any[] = [];
+  let overviewContents: any[] = [];
 
   if (folder) {
     if (!folder.parent_folder_id) {
       // Root course folder: find "Content" subfolder (case-insensitive) and traverse it
       const rootSubfolders = await db.collection('course_folders')
         .find({ parent_folder_id: realFolderId })
+        .sort({ sort_order: 1 })
+        .toArray();
+
+      // Get overview contents (any files uploaded directly in the root course folder)
+      overviewContents = await db.collection('course_contents')
+        .find({ folder_id: realFolderId })
         .sort({ sort_order: 1 })
         .toArray();
 
@@ -102,13 +139,16 @@ export default async function CourseFolderPage({ params }: Props) {
           .sort({ sort_order: 1 })
           .toArray();
       } else {
-        // Fallback: exclude 'thumbnail' folder
-        subfolders = rootSubfolders.filter((sf: any) => sf.title.toLowerCase() !== 'thumbnail');
+        // Fallback: exclude 'thumbnail' & '.thumbnail' folder
+        subfolders = rootSubfolders.filter((sf: any) => sf.title.toLowerCase() !== 'thumbnail' && sf.title.toLowerCase() !== '.thumbnail');
         contents = await db.collection('course_contents')
           .find({ folder_id: realFolderId })
           .sort({ sort_order: 1 })
           .toArray();
       }
+
+      // Ensure we exclude thumbnail folders anywhere in root folders listing
+      subfolders = subfolders.filter((sf: any) => sf.title.toLowerCase() !== 'thumbnail' && sf.title.toLowerCase() !== '.thumbnail');
     } else {
       // Subfolder/lesson page: show its own subfolders and files
       subfolders = await db.collection('course_folders')
@@ -120,10 +160,23 @@ export default async function CourseFolderPage({ params }: Props) {
         .find({ folder_id: realFolderId })
         .sort({ sort_order: 1 })
         .toArray();
+
+      subfolders = subfolders.filter((sf: any) => sf.title.toLowerCase() !== 'thumbnail' && sf.title.toLowerCase() !== '.thumbnail');
     }
   }
 
   const priceNum = Number(folder?.price || 0);
+  let enrollmentStatus = 'none';
+  if (sessionEmail && folder) {
+    const userProfile = await db.collection('users').findOne({ email: sessionEmail });
+    const enrolledCourses: string[] = userProfile?.enrolled_courses || [];
+    const parentCourseIdStr = folder._id?.toString() || '';
+    const parentCourseSlug = folder.slug || '';
+    const isEnrolled = enrolledCourses.includes(parentCourseIdStr) || enrolledCourses.includes(parentCourseSlug);
+    if (priceNum === 0 || isEnrolled) {
+      enrollmentStatus = 'active';
+    }
+  }
 
   return (
     <div className="w-full bg-background min-h-screen">
@@ -220,6 +273,36 @@ export default async function CourseFolderPage({ params }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Main Content (Curriculum Structure) */}
           <div className="lg:col-span-2 space-y-10">
+            {overviewContents && overviewContents.length > 0 && (
+              <section className="space-y-6">
+                <div className="border-b pb-3 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <h2 className="text-2xl font-headline font-bold">Course Overview & Introductory Files</h2>
+                </div>
+                <CourseFileViewer
+                  items={overviewContents.map((c: any) => {
+                    const secureToken = createSecureAccessToken({
+                      courseId: folder?.slug || folder?._id?.toString() || '',
+                      folderId: folder?._id?.toString() || '',
+                      email: sessionEmail,
+                      enrollmentStatus,
+                      fingerprint: fingerprint
+                    });
+                    return {
+                      id: c._id?.toString() || c.id || '',
+                      title: c.title || c.file_name || 'Untitled',
+                      file_url: sessionEmail
+                        ? `/api/courses/file?token=${secureToken}&fileId=${c._id?.toString() || c.id || ''}`
+                        : c.file_url,
+                      file_name: c.file_name,
+                      item_type: c.item_type,
+                      thumbnail_url: c.thumbnail_url,
+                    };
+                  })}
+                />
+              </section>
+            )}
+
             {subfolders && subfolders.length > 0 && (
               <section className="space-y-6">
                 <div className="border-b pb-3 flex items-center gap-2">
@@ -227,32 +310,41 @@ export default async function CourseFolderPage({ params }: Props) {
                   <h2 className="text-2xl font-headline font-bold">Course Lessons & Sections</h2>
                 </div>
                 <div className="space-y-4">
-                  {subfolders.map((sf: any) => (
-                    <Card key={sf._id?.toString() || sf.id} className="rounded-2xl border-primary/5 hover:border-primary/20 transition-colors shadow-sm group">
-                      <CardHeader className="flex flex-row items-center justify-between p-5 pb-3">
-                        <div className="space-y-1">
-                          <CardTitle className="text-lg font-headline font-bold group-hover:text-primary transition-colors flex items-center gap-2">
-                            📂 {sf.title}
-                          </CardTitle>
-                          <CardDescription className="text-xs leading-relaxed">{sf.description}</CardDescription>
-                        </div>
-                        {sf.is_paid ? (
-                          <Badge className="bg-amber-500/10 text-amber-500 border-none text-[9px] uppercase tracking-wider font-bold">Paid</Badge>
-                        ) : (
-                          <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[9px] uppercase tracking-wider font-bold">Free</Badge>
-                        )}
-                      </CardHeader>
-                      <CardContent className="px-5 pb-5">
-                        <div className="flex justify-end pt-2">
-                          <Button asChild variant="outline" size="sm" className="rounded-xl flex items-center gap-1">
-                            <Link href={`/courses/${sf.slug || sf._id?.toString() || sf.id}`}>
-                              Get Content <ChevronRight className="h-3 w-3" />
-                            </Link>
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {subfolders.map((sf: any) => {
+                    const secureToken = createSecureAccessToken({
+                      courseId: folder?.slug || folder?._id?.toString() || '',
+                      folderId: sf.slug || sf._id?.toString() || '',
+                      email: sessionEmail,
+                      enrollmentStatus,
+                      fingerprint: fingerprint
+                    });
+                    return (
+                      <Card key={sf._id?.toString() || sf.id} className="rounded-2xl border-primary/5 hover:border-primary/20 transition-colors shadow-sm group">
+                        <CardHeader className="flex flex-row items-center justify-between p-5 pb-3">
+                          <div className="space-y-1">
+                            <CardTitle className="text-lg font-headline font-bold group-hover:text-primary transition-colors flex items-center gap-2">
+                              📂 {sf.title}
+                            </CardTitle>
+                            <CardDescription className="text-xs leading-relaxed">{sf.description}</CardDescription>
+                          </div>
+                          {sf.is_paid ? (
+                            <Badge className="bg-amber-500/10 text-amber-500 border-none text-[9px] uppercase tracking-wider font-bold">Paid</Badge>
+                          ) : (
+                            <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[9px] uppercase tracking-wider font-bold">Free</Badge>
+                          )}
+                        </CardHeader>
+                        <CardContent className="px-5 pb-5">
+                          <div className="flex justify-end pt-2">
+                            <Button asChild variant="outline" size="sm" className="rounded-xl flex items-center gap-1">
+                              <Link href={`/courses/protected/${secureToken}`}>
+                                Get Content <ChevronRight className="h-3 w-3" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </section>
             )}

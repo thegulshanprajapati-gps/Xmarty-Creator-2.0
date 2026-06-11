@@ -4,6 +4,21 @@ import { CMSProvider } from "@/components/cms-provider";
 import { ClientLayoutShell } from "@/components/client-layout-shell";
 import { getDb } from '@/lib/mongodb';
 
+export const metadata: Metadata = {
+  title: {
+    default: "XmartyCreator",
+    template: "%s | XmartyCreator"
+  },
+  description: "Create and manage certificates, courses, and communities.",
+  keywords: ["education", "courses", "certificates", "exam", "learning"],
+  authors: [{ name: "XmartyCreator Team" }],
+  openGraph: {
+    title: "XmartyCreator",
+    description: "Create and manage certificates, courses, and communities.",
+    type: "website"
+  }
+};
+
 const defaultSettings = {
   themeMode: 'light',
   primaryColor: '#FF0000',

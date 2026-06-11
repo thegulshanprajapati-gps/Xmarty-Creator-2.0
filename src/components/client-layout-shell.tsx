@@ -20,6 +20,58 @@ export function ClientLayoutShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
+    
+    let title = "XmartyCreator";
+    if (pathname === '/') {
+      title = "Home | XmartyCreator";
+    } else if (pathname === '/login') {
+      title = "Sign In | XmartyCreator";
+    } else if (pathname === '/register') {
+      title = "Join Us | XmartyCreator";
+    } else if (pathname.startsWith('/profile/settings')) {
+      title = "Settings | Student Dashboard";
+    } else if (pathname.startsWith('/profile')) {
+      title = "Student Dashboard | XmartyCreator";
+    } else if (pathname.startsWith('/verify-certificate')) {
+      title = "Verify Student Credential | XmartyCreator";
+    } else if (pathname.startsWith('/courses')) {
+      title = "Browse Courses | XmartyCreator";
+    } else if (pathname.startsWith('/community')) {
+      title = "Community Hub | XmartyCreator";
+    } else if (pathname.startsWith('/blog')) {
+      title = "Insight Blogs | XmartyCreator";
+    } else if (pathname.startsWith('/test')) {
+      title = "Assessment | XmartyCreator";
+    } else if (pathname.startsWith('/about')) {
+      title = "About Us | XmartyCreator";
+    } else if (pathname.startsWith('/contact')) {
+      title = "Contact Us | XmartyCreator";
+    } else if (pathname.startsWith('/faq')) {
+      title = "FAQ | XmartyCreator";
+    } else if (pathname.startsWith('/privacy')) {
+      title = "Privacy Policy | XmartyCreator";
+    } else if (pathname.startsWith('/terms')) {
+      title = "Terms of Service | XmartyCreator";
+    } else if (pathname.startsWith('/refund')) {
+      title = "Refund Policy | XmartyCreator";
+    } else if (pathname.startsWith('/updates')) {
+      title = "Latest Updates | XmartyCreator";
+    } else if (pathname.startsWith('/leaderboard')) {
+      title = "Leaderboard Rankings | XmartyCreator";
+    } else if (pathname.startsWith('/search')) {
+      title = "Search Results | XmartyCreator";
+    } else {
+      const parts = pathname.split('/').filter(Boolean);
+      if (parts.length > 0) {
+        const capitalized = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).replace(/-/g, ' ')).join(' - ');
+        title = `${capitalized} | XmartyCreator`;
+      }
+    }
+    document.title = title;
+  }, [pathname, mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
     const startTime = Date.now();
     
     // Initial ping
@@ -54,7 +106,8 @@ export function ClientLayoutShell({ children }: { children: React.ReactNode }) {
   }, [pathname, mounted]);
 
   const isHome = pathname === '/';
-  const shouldHideSiteChrome = false;
+  const isProfile = pathname === '/profile' || pathname?.startsWith('/profile/');
+  const shouldHideSiteChrome = pathname === '/test' || pathname?.startsWith('/test/');
 
   if (!mounted) {
     return (
@@ -77,7 +130,7 @@ export function ClientLayoutShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </PageTransition>
-      {!shouldHideSiteChrome && !isPagePending && <Footer />}
+      {!shouldHideSiteChrome && !isPagePending && !isProfile && <Footer />}
       {!shouldHideSiteChrome && !isPagePending && <VasantAI />}
       <Toaster />
     </div>

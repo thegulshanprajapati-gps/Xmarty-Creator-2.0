@@ -258,7 +258,7 @@ function SearchContent() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'all' | 'courses' | 'blogs' | 'pages')}
                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   activeTab === tab.id
                     ? 'bg-primary text-white shadow-md shadow-primary/15'
